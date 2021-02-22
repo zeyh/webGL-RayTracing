@@ -1,17 +1,7 @@
+/** 
+ * modified from JT_GUIbox-Lib
+ */
 "use strict";
-// var g_EyeX = 0.0,
-//     g_EyeY = 0.0,
-//     g_EyeZ = 4.25; //eye position default
-// var g_LookX = 0.0,
-//     g_LookY = 0.0,
-//     g_LookZ = 0.0;
-// var g_LookUp = 0.0;
-// var g_speed = 1;
-
-// var g_dx; //record mouse changes for mouse hovers
-// var g_dy;
-// var g_prevDx;
-// var g_prevDy;
 
 /** 
  *  capture and respond to all keyboard & mouse inputs/outputs.
@@ -74,6 +64,28 @@ GUIbox.prototype.init = function () {
 
     // * Camera-Navigation
     // TODO:
+    this.camYawInit = Math.PI / 2.0; // set INITIAL yaw (radians) as the +y direction;
+    this.camYaw = this.camYawInit; // Use it to set current yaw angle. HORIZONTAL mouse-drag increases/decreates yaw.
+    this.camPitchInit = -Math.PI / 2; // define INITIAL pitch(radians) as -z direction;
+    this.camPitch = this.camPitchInit; // Use it to set current pitch angle. VERTICAL mouse-drag increases/decreases pitch.
+
+    this.camEyePt = vec4.fromValues(0, 0, 0, 1); // initial camera position
+    this.camAimPt = vec3.fromValues( //point on yaw-pitch sphere around eye:
+        this.camEyePt[0] + Math.cos(this.camYaw) * Math.cos(this.camPitch), // x
+        this.camEyePt[1] + Math.sin(this.camYaw) * Math.cos(this.camPitch), // y
+        this.camEyePt[2] + Math.sin(this.camPitch), // z
+        1.0
+    ); // w.
+    // Yaw & pitch angles let us specify an 'up' vector always perpendicular to
+    // the camera aiming direction. (same yaw, but increase pitch by +90 degrees)
+    this.camUpVec = vec4.fromValues(
+        // +90deg == Math.PI/2
+        Math.cos(this.camYaw) * Math.cos(this.camPitch + Math.PI / 2), // x
+        Math.sin(this.camYaw) * Math.cos(this.camPitch + Math.PI / 2), // y
+        Math.sin(this.camPitch + Math.PI / 2), // z
+        0.0
+    ); // w=0 for vectors, =1 for points.
+    this.camSpeed = 0.5; // world-space distance moved per keystroke
 
     // * REPORT initial mouse-drag totals on-screen: (should be zeroes)
     document.getElementById("MouseDragResult").innerHTML =
@@ -260,6 +272,204 @@ GUIbox.prototype.keyDown = function (kev) {
             break;
     }
 };
+
+
+GUIbox.prototype.keyDown = function (kev) {
+    //============================================================================
+    // Called when user presses down ANY key on the keyboard;
+    //
+    // For a light, easy explanation of keyboard events in JavaScript,
+    // see:    http://www.kirupa.com/html5/keyboard_events_in_javascript.htm
+    // For a thorough explanation of mess of JavaScript keyboard event handling,
+    // see:    http://javascript.info/tutorial/keyboard-events
+    //
+    // NOTE: Mozilla deprecated the 'keypress' event entirely, and in the
+    //        'keydown' event deprecated several read-only properties I used
+    //        previously, including kev.charCode, kev.keyCode.
+    //        Revised 5/2019:  use kev.key and kev.code instead.
+    //
+    /*
+	// On console, report EVERYTHING about this key-down event:  
+  console.log("--kev.code:",      kev.code,   "\t\t--kev.key:",     kev.key, 
+              "\n--kev.ctrlKey:", kev.ctrlKey,  "\t--kev.shiftKey:",kev.shiftKey,
+              "\n--kev.altKey:",  kev.altKey,   "\t--kev.metaKey:", kev.metaKey);
+*/
+    // On webpage, report EVERYTHING about this key-down event:
+    document.getElementById("KeyDown").innerHTML = ""; // clear old result
+    document.getElementById("KeyMod").innerHTML = "";
+    document.getElementById("KeyMod").innerHTML =
+        "   --kev.code:" +
+        kev.code +
+        "      --kev.key:" +
+        kev.key +
+        "<br>--kev.ctrlKey:" +
+        kev.ctrlKey +
+        " --kev.shiftKey:" +
+        kev.shiftKey +
+        "<br> --kev.altKey:" +
+        kev.altKey +
+        "  --kev.metaKey:" +
+        kev.metaKey;
+
+    switch (kev.code) {
+        case "Digit0":
+            document.getElementById("KeyDown").innerHTML =
+                "GUIbox.KeyDown() digit 0 key.(UNUSED)"; // print on webpage,
+            console.log("digit 0 key.(UNUSED)"); // print on console.
+            break;
+        case "Digit1":
+            document.getElementById("KeyDown").innerHTML =
+                "guiBox.KeyDown() digit 1 key.(UNUSED)"; // print on webpage,
+            console.log("digit 1 key.(UNUSED)"); // print on console.
+            break;
+        //------------------Ray Tracing----------------------
+        case "KeyC": // Clear the ray-traced image
+            document.getElementById("KeyDown").innerHTML =
+                "GUIbox.KeyDown() c/C key: CLEAR the ray-traced image buffer."; // print on webpage,
+            console.log("c/C: CLEAR ray-traced img buf"); // print on console,
+            g_myPic.setTestPattern(1); // solid orange.
+            g_sceneNum = 1; // (re-set onScene() button-handler, too)
+            rayView.switchToMe(); // be sure OUR VBO & shaders are in use, then
+            rayView.reload(); // re-transfer VBO contents and texture-map contents
+            drawAll();
+            break;
+        case "KeyT": // 't' or 'T' key: ray-trace!
+            document.getElementById("KeyDown").innerHTML =
+                "GUIbox.KeyDown() t/T key: TRACE a new image!"; // print on webpage,
+            console.log("t/T key: TRACE a new image!"); // print on console,
+            g_myPic.makeRayTracedImage(); // (near end of traceSupplement.js)
+            rayView.switchToMe(); // be sure OUR VBO & shaders are in use, then
+            rayView.reload(); // re-transfer VBO contents and texture-map contents
+            drawAll();
+            break;
+        //------------------WASD navigation-----------------
+        case "KeyA":
+            document.getElementById("KeyDown").innerHTML =
+                "GUIbox.KeyDown() a/A key. Strafe LEFT!";
+            // console.log("a/A key: Strafe LEFT!\n");
+            this.camStrafe_L();
+            break;
+        case "KeyD":
+            document.getElementById("KeyDown").innerHTML =
+                "GUIbox.KeyDown() d/D key. Strafe RIGHT!";
+            // console.log("d/D key: Strafe RIGHT!\n");
+            this.camStrafe_R();
+            break;
+        case "KeyS":
+            document.getElementById("KeyDown").innerHTML =
+                "GUIbox.KeyDown() s/S key. Move REV!";
+            // console.log("s/S key: Move REV!\n");
+            this.camRev();
+            break;
+        case "KeyW":
+            document.getElementById("KeyDown").innerHTML =
+                "GUIbox.keyDown() w/W key. Move FWD!";
+            // console.log("w/W key: Move FWD!\n");
+            this.camFwd();
+            break;
+        case "ArrowLeft":
+            document.getElementById("KeyDown").innerHTML =
+                "GUIbox.KeyDown() Arrow-Left,key=" + kev.key;
+            console.log("Arrow-Left key(UNUSED)");
+            break;
+        case "ArrowRight":
+            document.getElementById("KeyDown").innerHTML =
+                "GUIbox.KeyDown() Arrow-Right,key=" + kev.key;
+            console.log("Arrow-Right key(UNUSED)");
+            break;
+        case "ArrowUp":
+            document.getElementById("KeyDown").innerHTML =
+                "GUIbox.KeyDown() Arrow-Up,key=" + kev.key;
+            console.log("Arrow-Up key(UNUSED)");
+            break;
+        case "ArrowDown":
+            document.getElementById("KeyDown").innerHTML =
+                "GUIbox.KeyDown() Arrow-Down,key=" + kev.key;
+            console.log("Arrow-Down key(UNUSED)");
+            break;
+        default:
+            document.getElementById("KeyDown").innerHTML =
+                "GUIbox.KeyDown() UNUSED key=" + kev.key;
+            console.log("UNUSED key:", kev.key);
+            break;
+    }
+};
+
+/** 
+ * not used
+ */
+GUIbox.prototype.keyUp = function (kev) {
+    //	console.log('GUIbox.keyUp()--keyCode='+kev.keyCode+' released.');
+};
+
+
+/** 
+ *  Move the camera FORWARDS in the aiming direction, but without changing the aiming direction.
+ */
+GUIbox.prototype.camFwd = function () {
+    var fwd = vec4.create();
+    vec4.sub(fwd, this.camAimPt, this.camEyePt); // Eye-to-Aim point vector (w=0)
+    vec4.normalize(fwd, fwd); // make vector unit-length
+    // (careful! normalize includes w)
+    vec4.scale(fwd, fwd, this.camSpeed); // scale length to set velocity
+    vec4.add(this.camAimPt, this.camAimPt, fwd); // add to BOTH points.
+    vec4.add(this.camEyePt, this.camEyePt, fwd);
+    drawAll(); // show new result on-screen.
+};
+
+/** 
+ *  Move the camera BACKWARDS, in the reverse aiming direction 
+ */
+GUIbox.prototype.camRev = function () {
+    var rev = vec4.create();
+    vec4.sub(rev, this.camEyePt, this.camAimPt); // Aim-to-Eye point vector (w=0)
+    vec4.normalize(rev, rev); // make it unit-length
+    // (careful! normalize includes w)
+    vec4.scale(rev, rev, this.camSpeed); // scale length to set velocity
+    vec4.add(this.camAimPt, this.camAimPt, rev); // add to BOTH points.
+    vec4.add(this.camEyePt, this.camEyePt, rev);
+    drawAll(); // show new result on-screen.
+};
+
+/** 
+ *  Move horizontally left-wards, perpendicular to aiming direction
+ * 'rtSide' vector points rightwards, perpendicular to aiming direction.
+ */
+GUIbox.prototype.camStrafe_L = function () {
+    var rtSide = vec4.fromValues(
+        Math.sin(this.camYaw), // x
+        -Math.cos(this.camYaw), // y
+        0.0,
+        0.0
+    ); // z, w (==0; vector, not point!)
+    // rtSide is already unit length; no need to normalize.
+    vec4.scale(rtSide, rtSide, -this.camSpeed); // scale length to set velocity,
+    vec4.add(this.camAimPt, this.camAimPt, rtSide); // add to BOTH points.
+    vec4.add(this.camEyePt, this.camEyePt, rtSide);
+    drawAll();
+};
+
+/** 
+ *  Move horizontally left-wards, perpendicular to aiming direction
+ */
+GUIbox.prototype.camStrafe_R = function () {
+    var rtSide = vec4.fromValues(
+        Math.sin(this.camYaw), // x
+        -Math.cos(this.camYaw), // y
+        0,
+        0
+    ); // z,w  (vector, not point; w=0)
+    vec4.scale(rtSide, rtSide, this.camSpeed); // scale length to set velocity,
+    vec4.add(this.camAimPt, this.camAimPt, rtSide); // add to BOTH points.
+    vec4.add(this.camEyePt, this.camEyePt, rtSide);
+    drawAll();
+};
+
+
+
+
+
+
 
 
 

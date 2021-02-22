@@ -2,15 +2,19 @@
 Feb 21, 2021
 References: besides the inline links, the code is modified from 
     [Textbook] n/a
-    [Canvas Starter Code] for 351-2: JT_GUIbox-Lib.js, JT_VBObox-Lib, Week01_LineGrid.js, 
+    [Canvas Starter Code] for 351-2: JT_GUIbox-Lib.js, JT_VBObox-Lib, Week01_LineGrid.js,
+        main.js is modified from **Week01_LineGrid.js**
     [Previous projects] ProjectA from 351-2
 */
 /*
-    
-    TODO vbo box of line grid showing on screen
-    TODO 2 view ports
-    TODO GUI box
-    TODO lineGrid
+    Done: basic GUIbox
+    Done: basic VBO box
+    Done: vbo box of line grid showing on screen
+    Done: 2 view ports and basic viewing control
+
+    TODO add more elements to the VBO box
+    TODO change viewing aiming angles
+    TODO change VBO ray tracer
 
     Note: 
         console.log(JSON.parse(JSON.stringify(g_particleArray[index].s1)));
@@ -19,22 +23,54 @@ References: besides the inline links, the code is modified from
 
 "use strict";
 
+var boxVert0 =	
+'attribute vec4 a_Position;\n' +	
+'attribute vec4 a_Color;\n' +
+'uniform mat4 u_mvpMat;\n' +
+'varying vec4 v_colr;\n' +
+'void main() {\n' +
+'   gl_Position = u_mvpMat * a_Position;\n' +
+'   v_colr = a_Color;\n' +
+'}\n';
+
+var boxFrag0 = 
+'precision mediump float;\n' +      
+'varying vec4 v_colr;\n' +
+'void main() {\n' +
+'   gl_FragColor = v_colr; \n' +
+'}\n';
+
+var boxVert1 = 
+"attribute vec4 a_Position;\n" +
+"attribute vec2 a_TexCoord;\n" +
+"varying vec2 v_TexCoord;\n" +
+"void main() {\n" +
+"  gl_Position = a_Position;\n" +
+"  v_TexCoord = a_TexCoord;\n" +
+"}\n";
+
+var boxFrag1 = 
+"precision mediump float;\n" + 
+"uniform sampler2D u_Sampler;\n" +
+"varying vec2 v_TexCoord;\n" +
+"void main() {\n" +
+"  gl_FragColor = texture2D(u_Sampler, v_TexCoord);\n" +
+"}\n";
+
 var gl;
 var g_canvasID;
 var gui = new GUIbox();
 
-// var preView = new VBObox0(); // For WebGLpreview: holds one VBO and its shaders
-// var rayView = new VBObox1(); // for displaying the ray-tracing results.
+var preView = new VBObox0(boxVert0, boxFrag0, axis_vboArr0, 6); 
+var rayView = new VBObox1(boxVert1, boxFrag1, axis_vboArr1, 4); 
 
-// //-----------Ray Tracer Objects:---------------
-// var g_myPic = new CImgBuf(256, 256); // Create a floating-point image-buffer
-// // object to hold the image created by 'g_myScene' object.
-// // CAUTION! use power-of-two size (256x256; 512x512, etc)
-// // to ensure WebGL 1.0 texture-mapping works properly
-// var g_myScene = new CScene(g_myPic); // Create our ray-tracing object;
+// ! Ray Tracer Objects
+var g_myPic = new CImgBuf(256, 256); // Create a floating-point image-buffer object to hold the image created by 'g_myScene' object.
+// CAUTION! use power-of-two size (256x256; 512x512, etc)
+// to ensure WebGL 1.0 texture-mapping works properly
+var g_myScene = new CScene(g_myPic); // Create our ray-tracing object;
 // this contains our complete 3D scene & its camera
-// used to write a complete ray-traced image to the
-// CImgBuf object 'g_myPic' given as argument.
+// used to write a complete ray-traced image to the CImgBuf object 'g_myPic' given as argument.
 var g_SceneNum = 0; // scene-selector number; 0,1,2,... G_SCENE_MAX-1
 var G_SCENE_MAX = 3; // Number of scenes defined.
 var g_AAcode = 1; // Antialiasing setting: 1 == NO antialiasing at all. 2,3,4... == supersamples: 2x2, 3x3, 4x4, ...
@@ -57,12 +93,12 @@ function main() {
 
     // test_glMatrix(); // Make sure you understand how glMatrix.js library works.
 
-    // // Initialize each of our 'vboBox' objects:
-    // preView.init(gl); // VBO + shaders + uniforms + attribs for WebGL preview
-    // rayView.init(gl); //  "		"		" to display ray-traced on-screen result.
+    // Initialize each of our 'vboBox' objects:
+    preView.init(gl); // VBO + shaders + uniforms + attribs for WebGL preview
+    rayView.init(gl); //  "		"		" to display ray-traced on-screen result.
 
-    // onBrowserResize(); 
-    // drawAll();
+    onBrowserResize(); 
+    drawAll();
 
     // * ----------------------------------------------------------------------------
     // NOTE! Our ray-tracer ISN'T 'animated' in the usual sense!
@@ -91,16 +127,11 @@ function onSceneButton() {
     drawAll();
 }
 
+/** 
+ * Re-draw all WebGL contents in our browser window.
+ * NOTE: this program doesn't have an animation loop!
+ */
 function drawAll() {
-    // Re-draw all WebGL contents in our browser window.
-    //
-    // NOTE: this program doesn't have an animation loop!
-    //  We only re-draw the screen when the user needs it redrawn:
-    //  we call this function just once by main() at program start; or
-    //  by onBrowserResize() whenever our browser window size changes; or
-    //  by the GUIbox object 'gui' methods for user input from mouse, keyboard, or
-    //  on-screen buttons and controls (e.g. 't' or 'T' keys; mouse-drag;...)
-
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     // * left
