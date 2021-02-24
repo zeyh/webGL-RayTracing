@@ -11,6 +11,8 @@ References: besides the inline links, the code is modified from
     Done: basic VBO box
     Done: vbo box of line grid showing on screen
     Done: 2 view ports and basic viewing control
+    Done: Ray-traced result that exactly matches the WebGL preview.
+    Done: camera setLookAt rayPerspective() and rayFrustum()
 
     TODO add more elements to the VBO box
     TODO change viewing aiming angles

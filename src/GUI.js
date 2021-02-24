@@ -1,13 +1,13 @@
-/** 
+/**
  * modified from JT_GUIbox-Lib
  */
 "use strict";
 
-/** 
+/**
  *  capture and respond to all keyboard & mouse inputs/outputs.
  */
 function GUIbox() {
-    console.log("gui")
+    console.log("gui");
 
     this.isDrag = false; // mouse-drag: true while user holds down mouse button
 
@@ -19,7 +19,7 @@ function GUIbox() {
 
     this.xMdragTot = 0.0; // total (accumulated) mouse-drag amounts(in CVV coords).
     this.yMdragTot = 0.0;
-};
+}
 
 /**
  * Set the browser window to use GUIbox member functions as 'callbacks' for all
@@ -63,14 +63,14 @@ GUIbox.prototype.init = function () {
     );
 
     // * Camera-Navigation
-    // TODO:
     this.camYawInit = Math.PI / 2.0; // set INITIAL yaw (radians) as the +y direction;
     this.camYaw = this.camYawInit; // Use it to set current yaw angle. HORIZONTAL mouse-drag increases/decreates yaw.
     this.camPitchInit = -Math.PI / 2; // define INITIAL pitch(radians) as -z direction;
     this.camPitch = this.camPitchInit; // Use it to set current pitch angle. VERTICAL mouse-drag increases/decreases pitch.
 
     this.camEyePt = vec4.fromValues(0, 0, 0, 1); // initial camera position
-    this.camAimPt = vec3.fromValues( //point on yaw-pitch sphere around eye:
+    this.camAimPt = vec3.fromValues(
+        //point on yaw-pitch sphere around eye:
         this.camEyePt[0] + Math.cos(this.camYaw) * Math.cos(this.camPitch), // x
         this.camEyePt[1] + Math.sin(this.camYaw) * Math.cos(this.camPitch), // y
         this.camEyePt[2] + Math.sin(this.camPitch), // z
@@ -126,12 +126,12 @@ GUIbox.prototype.mouseDown = function (mev) {
         this.xMpos.toFixed(5) +
         ", " +
         this.yMpos.toFixed(5);
-    console.log(
-        "GUIbox.mouseDown(): xMpos,yMpos== " +
-            this.xMpos.toFixed(5) +
-            ", " +
-            this.yMpos.toFixed(5)
-    );
+    // console.log(
+    //     "GUIbox.mouseDown(): xMpos,yMpos== " +
+    //         this.xMpos.toFixed(5) +
+    //         ", " +
+    //         this.yMpos.toFixed(5)
+    // );
 };
 
 /**
@@ -149,7 +149,34 @@ GUIbox.prototype.mouseMove = function (mev) {
     this.yMpos = this.yCVV;
 
     // * Camera navigation:
-    // TODO:
+    this.camYaw = this.camYawInit + this.xMdragTot * 1.0; // Horiz drag in radians
+    this.camPitch = this.camPitchInit - this.yMdragTot * 1.0; // Vert drag in radians
+    if (this.camYaw < -Math.PI) {
+        this.camYaw += 2 * Math.PI;
+    } else if (this.camYaw > Math.PI) {
+        this.camYaw -= 2 * Math.PI;
+    }
+    if (this.camPitch < -Math.PI / 2) {
+        this.camPitch = -Math.PI / 2; // (-Z aiming direction)
+        this.yMdragTot = this.camPitchInit + Math.PI / 2; // upper limit on yMdragTot.
+    } else if (this.camPitch > Math.PI / 2) {
+        this.camPitch = Math.PI / 2; // (+Z aiming direction)
+        this.yMdragTot = this.camPitchInit - Math.PI / 2; // lower limit on yMdragTot.
+    }
+    // update camera aim point: using spherical coords:
+    this.camAimPt[0] =
+        this.camEyePt[0] + Math.cos(this.camYaw) * Math.cos(this.camPitch); // x
+    this.camAimPt[1] =
+        this.camEyePt[1] + Math.sin(this.camYaw) * Math.cos(this.camPitch); // y
+    this.camAimPt[2] = this.camEyePt[2] + Math.sin(this.camPitch); // z
+    // update the 'up' vector too (pitch an additional +90 degrees)
+    this.camUpVec[0] =
+        Math.cos(this.camYaw) * Math.cos(this.camPitch + Math.PI / 2);
+    this.camUpVec[1] =
+        Math.sin(this.camYaw) * Math.cos(this.camPitch + Math.PI / 2);
+    this.camUpVec[2] = Math.sin(this.camPitch + Math.PI / 2);
+
+    drawAll(); // we MOVED the camera -- re-draw everything!
 
     // Report mouse-drag totals on our webpage:
     document.getElementById("MouseDragResult").innerHTML =
@@ -185,8 +212,8 @@ GUIbox.prototype.mouseUp = function (mev) {
         this.yMpos.toFixed(5);
 };
 
-/** 
- * keyboard listener 
+/**
+ * keyboard listener
  */
 GUIbox.prototype.keyDown = function (kev) {
     switch (kev.code) {
@@ -272,7 +299,6 @@ GUIbox.prototype.keyDown = function (kev) {
             break;
     }
 };
-
 
 GUIbox.prototype.keyDown = function (kev) {
     //============================================================================
@@ -395,15 +421,14 @@ GUIbox.prototype.keyDown = function (kev) {
     }
 };
 
-/** 
+/**
  * not used
  */
 GUIbox.prototype.keyUp = function (kev) {
     //	console.log('GUIbox.keyUp()--keyCode='+kev.keyCode+' released.');
 };
 
-
-/** 
+/**
  *  Move the camera FORWARDS in the aiming direction, but without changing the aiming direction.
  */
 GUIbox.prototype.camFwd = function () {
@@ -417,8 +442,8 @@ GUIbox.prototype.camFwd = function () {
     drawAll(); // show new result on-screen.
 };
 
-/** 
- *  Move the camera BACKWARDS, in the reverse aiming direction 
+/**
+ *  Move the camera BACKWARDS, in the reverse aiming direction
  */
 GUIbox.prototype.camRev = function () {
     var rev = vec4.create();
@@ -431,7 +456,7 @@ GUIbox.prototype.camRev = function () {
     drawAll(); // show new result on-screen.
 };
 
-/** 
+/**
  *  Move horizontally left-wards, perpendicular to aiming direction
  * 'rtSide' vector points rightwards, perpendicular to aiming direction.
  */
@@ -449,7 +474,7 @@ GUIbox.prototype.camStrafe_L = function () {
     drawAll();
 };
 
-/** 
+/**
  *  Move horizontally left-wards, perpendicular to aiming direction
  */
 GUIbox.prototype.camStrafe_R = function () {
@@ -464,19 +489,6 @@ GUIbox.prototype.camStrafe_R = function () {
     vec4.add(this.camEyePt, this.camEyePt, rtSide);
     drawAll();
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // // ! ===================================for individual control button
 // var hideGrid = false;
@@ -812,7 +824,6 @@ GUIbox.prototype.camStrafe_R = function () {
 //         g_viewScale += 0.05;
 //     }
 // }
-
 
 // var quatMatrix = new Matrix4();
 // var qNew = new Quaternion(0, 0, 0, 1); // most-recent mouse drag's rotation
