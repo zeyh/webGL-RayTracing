@@ -150,11 +150,10 @@ CImgBuf.prototype.makeRayTracedImage = function () {
 
     var eyeRay = new CRay(); // the ray we trace from our camera for each pixel
     var myCam = new CCamera(); // the 3D camera that sets eyeRay values
-    var myGrid = new CGeom(JT_GNDPLANE);
+    var myGrid = new CGeom(PLANE);
     var colr = vec4.create(); // floating-point RGBA color value
 
     myCam.raylookAt(gui.camEyePt, gui.camAimPt, gui.camUpVec);
-
 
     var hit = 0;
     var idx = 0; // CImgBuf array index(i,j) == (j*this.xSiz + i)*this.pixSiz
@@ -164,8 +163,6 @@ CImgBuf.prototype.makeRayTracedImage = function () {
         for (i = 0; i < this.xSiz; i++) {
             // and the i-th pixel on that row,
             myCam.setEyeRay(eyeRay, i, j); // create ray for pixel (i,j)
-
-    // if(i==0 && j==0) console.log('eyeRay:', eyeRay);
 
             hit = myGrid.traceGrid(eyeRay); // trace ray to the grid
             if (hit == 0) {

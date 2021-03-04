@@ -90,9 +90,6 @@
         that converts EyePt, AimPt and UpVec vector into  U,V,N vectors.
     */
 
-
-
-
 function CCamera() {
     //=============================================================================
     // Object for a ray-tracing camera defined the 'world' coordinate system, with
@@ -135,7 +132,7 @@ function CCamera() {
 
     // And the lower-left-most corner of the image is at (u,v,n) = (iLeft,iBot,-iNear).
     // (These should match the CImgBuf object 'g_myPic' object's xSiz, ySiz members.
-    this.xmax = g_myPic.xSiz; // horizontal,
+    this.xmax = g_myPic.xSiz; // horizontal, or 256
     this.ymax = g_myPic.ySiz; // vertical image resolution.
     // To ray-trace an image of xmax,ymax pixels, divide this rectangular image
     // plane into xmax,ymax rectangular tiles, and shoot eye-rays from the camera's
@@ -153,7 +150,6 @@ function CCamera() {
     // Divide the image plane into rectangular tiles, one for each pixel:
     this.ufrac = (this.iRight - this.iLeft) / this.xmax; // pixel tile's width
     this.vfrac = (this.iTop - this.iBot) / this.ymax; // pixel tile's height.
-
 }
 
 CCamera.prototype.rayFrustum = function (left, right, bot, top, near) {
@@ -260,8 +256,8 @@ CCamera.prototype.setEyeRay = function (myeRay, xpos, ypos) {
     vec4.copy(myeRay.dir, xyzPos);
 };
 
-/** 
- * print CCamera object's current contents in console window: 
+/**
+ * print CCamera object's current contents in console window:
  */
 CCamera.prototype.printMe = function () {
     console.log("you called CCamera.printMe()");

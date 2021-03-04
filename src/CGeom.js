@@ -1,14 +1,8 @@
 //=============================================================================
 // Allowable values for CGeom.shapeType variable.  Add some of your own!
-const JT_GNDPLANE = 0; // An endless 'ground plane' surface.
-const JT_SPHERE = 1; // A sphere.
-const JT_BOX = 2; // An axis-aligned cube.
-const JT_CYLINDER = 3; // A cylinder with user-settable radius at each end
-// and user-settable length.  radius of 0 at either
-// end makes a cone; length of 0 with nonzero
-// radius at each end makes a disk.
-const JT_TRIANGLE = 4; // a triangle with 3 vertices.
-const JT_BLOBBIES = 5; // Implicit surface:Blinn-style Gaussian 'blobbies'.
+const PLANE = 0;
+const SPHERE = 1;
+const CUBE = 2;
 
 function CGeom(shapeSelect) {
     //=============================================================================
@@ -29,7 +23,7 @@ function CGeom(shapeSelect) {
     // or box, just set the parameters in world2model matrix. Note that you can
     // scale the box or sphere differently in different directions, forming
     // ellipsoids for the unit sphere and rectangles (or prisms) from the unit box.
-    if (shapeSelect == undefined) shapeSelect = JT_GND_PLANE; // default
+    if (shapeSelect == undefined) shapeSelect = PLANE; // default
     this.shapeType = shapeSelect;
 
     this.world2model = mat4.create(); // the matrix used to transform rays from

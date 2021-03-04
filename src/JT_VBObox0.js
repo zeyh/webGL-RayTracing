@@ -16,7 +16,15 @@ function VBObox0(vert_src, frag_src, vboContents, vboVerts) {
 
     this.vboContents = vboContents;
     this.vboVerts = vboVerts;
+
+    // ! draw each individual part of array
+    this.bgnGrid = this.vboVerts;
     this.appendGroundGrid();
+    this.bgnSphere = this.vboVerts;
+    this.appendWireSphere();
+    this.bgnCyl = this.vboVerts;
+    this.appendWireCylinder(4);
+
     this.FSIZE = this.vboContents.BYTES_PER_ELEMENT; // bytes req'd by 1 vboContents array element for vertexAttribPointer()
     this.vboBytes = this.vboContents.length * this.FSIZE; // total number of bytes stored in vboContents
     this.vboStride = this.vboBytes / this.vboVerts; // (== # of bytes to store one complete vertex).
@@ -52,14 +60,14 @@ function VBObox0(vert_src, frag_src, vboContents, vboVerts) {
  * print vbo info for debugging
  */
 VBObox0.prototype.print = function () {
-    console.log("=====================")
-    console.log("👋 hello from VBObox0 in initVBOwithShaders.js")
+    console.log("=====================");
+    console.log("👋 hello from VBObox0 in initVBOwithShaders.js");
     console.log("vboStride in constructor: ", this.vboStride);
     console.log("FSIZE:    ", this.FSIZE);
     console.log("vboBytes: ", this.vboBytes);
     console.log("this.vboVerts: ", this.vboVerts);
     console.log("vboContents.length: ", this.vboContents.length);
-    console.log("=====================")
+    console.log("=====================");
 };
 
 /**
@@ -112,7 +120,11 @@ VBObox0.prototype.appendGroundGrid = function () {
             line
         );
         xNow = -this.xyMax + line * xgap; // find the x-value of this line,
-        for (let i = 0; i < vertsPerLine; i++, v++, idx += this.floatsPerVertex) {
+        for (
+            let i = 0;
+            i < vertsPerLine;
+            i++, v++, idx += this.floatsPerVertex
+        ) {
             // for every vertex in this line,  find x,y,z,w;  r,g,b,a;
             // and store them sequentially in vertSet[] array.
             // We already know  xNow; find yNow:
@@ -164,7 +176,11 @@ VBObox0.prototype.appendGroundGrid = function () {
             line
         );
         yNow = -this.xyMax + line * ygap; // find the y-value of this line,
-        for (let i = 0; i < vertsPerLine; i++, v++, idx += this.floatsPerVertex) {
+        for (
+            let i = 0;
+            i < vertsPerLine;
+            i++, v++, idx += this.floatsPerVertex
+        ) {
             // for every vertex in this line,  find x,y,z,w;  r,g,b,a;
             // and store them sequentially in vertSet[] array.
             // We already know  yNow; find xNow:
@@ -211,6 +227,242 @@ VBObox0.prototype.appendGroundGrid = function () {
     tmp.set(this.vboContents, 0); // copy old VBOcontents into tmp, and
     tmp.set(vertSet, this.vboContents.length); // copy new vertSet just after it.
     this.vboVerts += vertCount; // find number of verts in both.
+    this.vboContents = tmp; // REPLACE old vboContents with tmp
+};
+
+/**
+ * @param {NScount} int number of sides of sphere subdivision, that must >= 3 [default 13]
+ * Create a set of vertices to draw grid of colored lines that form a sphere of radius 1, centered at x=y=z=0
+ * Append the contents of vertSet[] to existing contents of the this.vboContents
+ * update this.vboVerts
+ */
+VBObox0.prototype.appendWireSphere = function (NScount) {
+    if (NScount == undefined) NScount = 13; // default value.
+    if (NScount < 3) NScount = 3; // enforce minimums
+    let EWcount = 2 * NScount;
+
+    var vertCount = 2 * EWcount * NScount;
+    var vertSet = new Float32Array(vertCount * this.floatsPerVertex);
+    this.EWbgnColr = vec4.fromValues(1.0, 0.5, 0.0, 1.0); // Orange
+    this.EWendColr = vec4.fromValues(0.0, 0.5, 1.0, 1.0); // Cyan
+    this.NSbgnColr = vec4.fromValues(1.0, 1.0, 1.0, 1.0); // White
+    this.NSendColr = vec4.fromValues(0.0, 1.0, 0.5, 1.0); // White
+
+    // Compute how much the color changes between 1 arc (or ring) and the next:
+    var EWcolrStep = vec4.create(); // [0,0,0,0]
+    var NScolrStep = vec4.create();
+
+    vec4.subtract(EWcolrStep, this.EWendColr, this.EWbgnColr); // End - Bgn
+    vec4.subtract(NScolrStep, this.NSendColr, this.NSbgnColr);
+    vec4.scale(EWcolrStep, EWcolrStep, 2.0 / (EWcount - 1)); // double-step for arc colors
+    vec4.scale(NScolrStep, NScolrStep, 1.0 / (NScount - 1)); // single-step for ring colors
+
+    var EWgap = 1.0 / (EWcount - 1); // vertex spacing in each ring of constant NS
+    var NSgap = 1.0 / (NScount - 1); // vertex spacing in each North-South arc
+    var EWint = 0; // east/west integer (0 to EWcount) for current vertex,
+    var NSint = 0; // north/south integer (0 to NScount) for current vertex.
+    var v = 0; // vertex-counter, used for the entire sphere;
+    var idx = 0; // vertSet[] array index.
+    var pos = vec4.create(); // vertex position.
+    var colrNow = vec4.create(); // color of the current arc or ring.
+
+    for (NSint = 0; NSint < NScount; NSint++) {
+        colrNow = vec4.scaleAndAdd(colrNow, this.NSbgnColr, NScolrStep, NSint);
+        for (
+            EWint = 0;
+            EWint < EWcount;
+            EWint++, v++, idx += this.floatsPerVertex
+        ) {
+            this.polar2xyz(
+                pos, // vec4 that holds vertex position in world-space x,y,z;
+                EWint * EWgap, // normalized East/west longitude (from 0 to 1)
+                NSint * NSgap
+            ); // normalized North/South lattitude (from 0 to 1)
+            vertSet[idx] = pos[0]; // x value
+            vertSet[idx + 1] = pos[1]; // y value
+            vertSet[idx + 2] = pos[2]; // z value
+            vertSet[idx + 3] = 1.0; // w (it's a point, not a vector)
+            vertSet[idx + 4] = colrNow[0]; // r
+            vertSet[idx + 5] = colrNow[1]; // g
+            vertSet[idx + 6] = colrNow[2]; // b
+            vertSet[idx + 7] = colrNow[3]; // a;
+        }
+    }
+
+    for (EWint = 0; EWint < EWcount; EWint++) {
+        // for every arc of constant EWfrac,
+        if (EWint < EWcount / 2) {
+            // color INCREASES for first hemisphere of arcs:
+            colrNow = vec4.scaleAndAdd(
+                colrNow,
+                this.EWbgnColr,
+                EWcolrStep,
+                EWint
+            );
+        } else {
+            // color DECREASES for second hemisphere of arcs:
+            colrNow = vec4.scaleAndAdd(
+                colrNow,
+                this.EWbgnColr,
+                EWcolrStep,
+                EWcount - EWint
+            );
+        }
+        for (
+            NSint = 0;
+            NSint < NScount;
+            NSint++, v++, idx += this.floatsPerVertex
+        ) {
+            // for every vertex in this arc, find x,y,z,w;  r,g,b,a;
+            // and store them sequentially in vertSet[] array.
+            // Find vertex position from normalized lattitude & longitude:
+            this.polar2xyz(
+                pos, // vec4 that holds vertex position in world-space x,y,z;
+                EWint * EWgap, // normalized East/west longitude (from 0 to 1)
+                NSint * NSgap
+            ); // normalized North/South lattitude (from 0 to 1)
+            vertSet[idx] = pos[0]; // x value
+            vertSet[idx + 1] = pos[1]; // y value
+            vertSet[idx + 2] = pos[2]; // z value
+            vertSet[idx + 3] = 1.0; // w (it's a point, not a vector)
+            vertSet[idx + 4] = colrNow[0]; // r
+            vertSet[idx + 5] = colrNow[1]; // g
+            vertSet[idx + 6] = colrNow[2]; // b
+            vertSet[idx + 7] = colrNow[3]; // a;
+        }
+    }
+
+    var tmp = new Float32Array(this.vboContents.length + vertSet.length);
+    tmp.set(this.vboContents, 0); // copy old VBOcontents into tmp, and
+    tmp.set(vertSet, this.vboContents.length); // copy new vertSet just after it.
+    this.vboVerts += vertSet.length / this.floatsPerVertex; // find number of verts in both.
+    this.vboContents = tmp; // REPLACE old vboContents with tmp
+};
+
+/**
+ * @param {sideNumber} int number of sides that must be >= 2 [default 6]
+ * @param {topRadius} float radius of top that must be [>= 0] [default 1]
+ * Create a set of vertices to draw grid of colored lines that form a Cylinder
+ * Append the contents of vertSet[] to existing contents of the this.vboContents
+ * update this.vboVerts
+ * ref from 351-1 basicShapes.js
+ */
+VBObox0.prototype.appendWireCylinder = function (sideNumber, topRadius) {
+    var topColr = new Float32Array([0.8, 0.8, 0.0, 1.0]); // light yellow top,
+    var walColr = new Float32Array([0.2, 0.6, 0.2, 1.0]); // dark green walls,
+    var botColr = new Float32Array([0.2, 0.3, 0.7, 1.0]); // light blue bottom,
+    var ctrColr = new Float32Array([0.1, 0.1, 0.1, 1.0]); // near black end-cap centers,
+    var errColr = new Float32Array([1.0, 0.2, 0.2, 1.0]); // Bright-red trouble color.
+
+    var capVerts = sideNumber == undefined || sideNumber < 2 ? 6 : sideNumber; // # of vertices around the topmost 'cap' of the shape
+    var topRadius = topRadius == undefined || topRadius < 0 ? 1 : topRadius; // radius of top of cylinder (bottom is always 1.0)
+
+    let cylVerts = new Float32Array((capVerts * 6 - 2) * this.floatsPerVertex);
+    for (v = 0, j = 0; v < 2 * capVerts - 1; v++, j += this.floatsPerVertex) {
+        // START at vertex v = 0; on x-axis on end-cap's outer edge, at xyz = 1,0,-1.
+        // END at the vertex 2*(capVerts-1), the last outer-edge vertex before
+        // we reach the starting vertex at 1,0,-1.
+        if (v % 2 == 0) {
+            cylVerts[j] = Math.cos((Math.PI * v) / capVerts); // x
+            cylVerts[j + 1] = Math.sin((Math.PI * v) / capVerts); // y
+            cylVerts[j + 2] = -1.0; // z
+            cylVerts[j + 3] = 1.0; // w.
+            cylVerts[j + 4] = botColr[0]; //r
+            cylVerts[j + 5] = botColr[1]; //g
+            cylVerts[j + 6] = botColr[2]; //b
+            cylVerts[j + 7] = botColr[3]; //a
+        } else {
+            // put odd# vertices at center of cylinder's bottom cap:
+            cylVerts[j] = 0.0; // x,y,z,w == 0,0,-1,1; centered on z axis at -1.
+            cylVerts[j + 1] = 0.0;
+            cylVerts[j + 2] = -1.0;
+            cylVerts[j + 3] = 1.0; // r,g,b,a = ctrColr[]
+            cylVerts[j + 4] = ctrColr[0];
+            cylVerts[j + 5] = ctrColr[1];
+            cylVerts[j + 6] = ctrColr[2];
+            cylVerts[j + 7] = ctrColr[3];
+        }
+    }
+    // Create the cylinder side walls, made of 2*capVerts vertices.
+    // v counts vertices within the wall; j continues to count array elements
+    // START with the vertex at 1,0,-1 (completes the cylinder's bottom cap;
+    // completes the 'transition edge' drawn in blue in lecture notes).
+    for (v = 0; v < 2 * capVerts; v++, j += this.floatsPerVertex) {
+        if (v % 2 == 0) {
+            // count verts from zero again,
+            // and put all even# verts along outer edge of bottom cap:
+            cylVerts[j] = Math.cos((Math.PI * v) / capVerts); // x
+            cylVerts[j + 1] = Math.sin((Math.PI * v) / capVerts); // y
+            cylVerts[j + 2] = -1.0; // ==z  BOTTOM cap,
+            cylVerts[j + 3] = 1.0; // w.
+            // r,g,b = walColr[]
+            cylVerts[j + 4] = walColr[0];
+            cylVerts[j + 5] = walColr[1];
+            cylVerts[j + 6] = walColr[2];
+            cylVerts[j + 7] = walColr[3];
+            if (v == 0) {
+                // UGLY TROUBLESOME vertex--shares its 1 color with THREE
+                // triangles; 1 in cap, 1 in step, 1 in wall.
+                cylVerts[j + 4] = errColr[0];
+                cylVerts[j + 5] = errColr[1];
+                cylVerts[j + 6] = errColr[2];
+                cylVerts[j + 7] = errColr[3];
+            }
+        } // position all odd# vertices along the top cap (not yet created)
+        else {
+            cylVerts[j] = topRadius * Math.cos((Math.PI * (v - 1)) / capVerts); // x
+            cylVerts[j + 1] =
+                topRadius * Math.sin((Math.PI * (v - 1)) / capVerts); // y
+            cylVerts[j + 2] = 1.0; // == z TOP cap,
+            cylVerts[j + 3] = 1.0; // w.
+            // r,g,b = walColr;
+            cylVerts[j + 4] = walColr[0];
+            cylVerts[j + 5] = walColr[1];
+            cylVerts[j + 6] = walColr[2];
+            cylVerts[j + 4] = walColr[3];
+        }
+    }
+    // Complete the cylinder with its top cap, made of 2*capVerts -1 vertices.
+    // v counts the vertices in the cap; j continues to count array elements.
+    for (v = 0; v < 2 * capVerts - 1; v++, j += this.floatsPerVertex) {
+        // count vertices from zero again, and
+        if (v % 2 == 0) {
+            // position even #'d vertices around top cap's outer edge.
+            cylVerts[j] = topRadius * Math.cos((Math.PI * v) / capVerts); // x
+            cylVerts[j + 1] = topRadius * Math.sin((Math.PI * v) / capVerts); // y
+            cylVerts[j + 2] = 1.0; // z
+            cylVerts[j + 3] = 1.0; // w.
+            // r,g,b = topColr[]
+            cylVerts[j + 4] = topColr[0];
+            cylVerts[j + 5] = topColr[1];
+            cylVerts[j + 6] = topColr[2];
+            cylVerts[j + 7] = topColr[3];
+            if (v == 0) {
+                // UGLY TROUBLESOME vertex--shares its 1 color with THREE
+                // triangles; 1 in cap, 1 in step, 1 in wall.
+                cylVerts[j + 4] = errColr[0];
+                cylVerts[j + 5] = errColr[1];
+                cylVerts[j + 6] = errColr[2];
+                cylVerts[j + 7] = errColr[3];
+            }
+        } else {
+            // position odd#'d vertices at center of the top cap:
+            cylVerts[j] = 0.0; // x,y,z,w == 0,0,-1,1
+            cylVerts[j + 1] = 0.0;
+            cylVerts[j + 2] = 1.0;
+            cylVerts[j + 3] = 1.0;
+            // r,g,b = topColr[]
+            cylVerts[j + 4] = ctrColr[0];
+            cylVerts[j + 5] = ctrColr[1];
+            cylVerts[j + 6] = ctrColr[2];
+            cylVerts[j + 7] = ctrColr[3];
+        }
+    }
+
+    var tmp = new Float32Array(this.vboContents.length + cylVerts.length);
+    tmp.set(this.vboContents, 0); // copy old VBOcontents into tmp, and
+    tmp.set(cylVerts, this.vboContents.length); // copy new vertSet just after it.
+    this.vboVerts += cylVerts.length / this.floatsPerVertex; // find number of verts in both.
     this.vboContents = tmp; // REPLACE old vboContents with tmp
 };
 
@@ -330,27 +582,22 @@ VBObox0.prototype.adjust = function () {
     }
 
     var camProj = mat4.create();
-    // We can either use the perspective() function, like this:
-    /* mat4.perspective(camProj,             // out
-              glMatrix.toRadian(90.0),  // fovy in radians 
-              1.0,                      // aspect ratio width/height
-              0.1,                      // znear
-              100.0);                  // zfar
-    */
-    // or use the frustum() function, like this:
-    mat4.frustum(camProj, -1.0, 1.0,    // left, right
-        -1.0, 1.0,    // bottom, top
-        1.0, 100.0);   // near, far
-
+    mat4.perspective(
+        camProj,
+        glMatrix.toRadian(gui.camFovy),
+        gui.camAspect,
+        gui.camNear,
+        gui.camFar
+    );
+    // mat4.frustum(camProj, -1.0, 1.0, -1.0, 1.0, 1.0, 100.0);
     var camView = mat4.create();
     mat4.lookAt(camView, gui.camEyePt, gui.camAimPt, gui.camUpVec);
     mat4.multiply(this.mvpMat, camProj, camView);
-    // mvpMat now set for WORLD drawing axes.
-    // Our ray-tracer's ground-plane grid is at z = zGrid = -5;
+
     var trans = vec3.fromValues(0, 0, -5);
     mat4.translate(this.mvpMat, this.mvpMat, trans);
 
-    gl.uniformMatrix4fv(this.u_mvpMatLoc, false, this.mvpMat); 
+    gl.uniformMatrix4fv(this.u_mvpMatLoc, false, this.mvpMat);
 };
 
 /**
@@ -364,7 +611,31 @@ VBObox0.prototype.draw = function () {
                 ".draw() call you needed to call this.switchToMe()!!"
         );
     }
-    gl.drawArrays(gl.LINES, 0, this.vboVerts);
+    // ! draw grid and axis
+    var tmp = mat4.create();
+    mat4.copy(tmp, this.mvpMat); // SAVE world-space coordinate transform
+    gl.drawArrays(gl.LINES, 0, this.bgnSphere);
+
+    // ! draw model objects
+    // * draw sphere
+    var tmp = mat4.create();
+    mat4.copy(tmp, this.mvpMat);
+    // mat4.translate(this.mvpMat, this.mvpMat, vec3.fromValues(1.0, 1.0, 1.3));
+    // mat4.rotate(this.mvpMat,this.mvpMat,0.25 * Math.PI,vec3.fromValues(1, 0, 0));
+    // mat4.rotate(this.mvpMat,this.mvpMat,0.25 * Math.PI,vec3.fromValues(0, 0, 1));
+    gl.uniformMatrix4fv(this.u_mvpMatLoc, false, this.mvpMat);
+    mat4.copy(this.mvpMat, tmp);
+    gl.drawArrays(gl.LINE_STRIP, this.bgnSphere, this.bgnCyl - this.bgnSphere);
+
+    // * draw cylinder
+    mat4.copy(this.mvpMat, tmp); 
+    mat4.translate(this.mvpMat, this.mvpMat, vec3.fromValues(1.2, -2.0, 1.0));
+    gl.uniformMatrix4fv(this.u_mvpMatLoc, false, this.mvpMat); 
+    mat4.copy(this.mvpMat, tmp); 
+    gl.drawArrays(gl.TRIANGLE_STRIP,this.bgnCyl, this.vboVerts - this.bgnCyl); 
+    mat4.copy(this.mvpMat, tmp); // RESTORE current value (needs push-down stack!)
+
+    // gl.drawArrays(gl.LINES, 0, this.vboVerts);
 };
 
 /**
@@ -377,4 +648,21 @@ VBObox0.prototype.reload = function () {
         // begins in the VBO.
         this.vboContents
     ); // the JS source-data array used to fill VBO
+};
+
+/**
+ *  Set the vec4 argument 'out4' to the 3D point on the unit sphere described by normalized longitude and lattitude angles: 0 <= fracEW, fracNS <= 1.
+ */
+VBObox0.prototype.polar2xyz = function (out4, fracEW, fracNS) {
+    var sEW = Math.sin(2.0 * Math.PI * fracEW);
+    var cEW = Math.cos(2.0 * Math.PI * fracEW);
+    var sNS = Math.sin(Math.PI * fracNS);
+    var cNS = Math.cos(Math.PI * fracNS);
+    vec4.set(
+        out4,
+        cEW * sNS, // x = cos(EW)sin(NS);
+        sEW * sNS, // y = sin(EW)sin(NS);
+        cNS,
+        1.0
+    ); // z =        cos(NS); w=1.0  (point, not vec)
 };

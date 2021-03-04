@@ -14,9 +14,10 @@ References: besides the inline links, the code is modified from
     Done: Ray-traced result that exactly matches the WebGL preview.
     Done: camera setLookAt rayPerspective() and rayFrustum()
 
-    TODO add more elements to the VBO box
-    TODO change viewing aiming angles
-    TODO change VBO ray tracer
+    ? DOING: user-adjustable antialiasing
+    ? DOING: Add a grid-plane-like flat disk and/or a sphere 
+    ? CGeom: rayLoadIdentity(), rayTranslate(), rayRotate(), rayScale(),
+    ? CGeom: worldRay2model transform matrix & squash a object
 
     Note: 
         console.log(JSON.parse(JSON.stringify(g_particleArray[index].s1)));

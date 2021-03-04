@@ -86,7 +86,11 @@ GUIbox.prototype.init = function () {
         0.0
     ); // w=0 for vectors, =1 for points.
     this.camSpeed = 0.5; // world-space distance moved per keystroke
-
+    this.camFovy  = 45.0;  
+    this.camAspect = 1.0; 
+    this.camNear = 1.0;   
+    this.camFar = 10000; 
+    
     // * REPORT initial mouse-drag totals on-screen: (should be zeroes)
     document.getElementById("MouseDragResult").innerHTML =
         "Mouse Drag totals (CVV coords):\t" +
