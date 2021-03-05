@@ -13,11 +13,11 @@ References: besides the inline links, the code is modified from
     Done: 2 view ports and basic viewing control
     Done: Ray-traced result that exactly matches the WebGL preview.
     Done: camera setLookAt rayPerspective() and rayFrustum()
-
+    Done: Add a grid-plane-like flat disk and/or a sphere 
+    Done: CGeom: rayLoadIdentity(), rayTranslate(), rayRotate(), rayScale(), worldRay2model transform matrix & squash a object
+    
     ? DOING: user-adjustable antialiasing
-    ? DOING: Add a grid-plane-like flat disk and/or a sphere 
-    ? CGeom: rayLoadIdentity(), rayTranslate(), rayRotate(), rayScale(),
-    ? CGeom: worldRay2model transform matrix & squash a object
+    ? CGeom: 
 
     Note: 
         console.log(JSON.parse(JSON.stringify(g_particleArray[index].s1)));
@@ -26,52 +26,52 @@ References: besides the inline links, the code is modified from
 
 "use strict";
 
-var boxVert0 =	
-'attribute vec4 a_Position;\n' +	
-'attribute vec4 a_Color;\n' +
-'uniform mat4 u_mvpMat;\n' +
-'varying vec4 v_colr;\n' +
-'void main() {\n' +
-'   gl_Position = u_mvpMat * a_Position;\n' +
-'   v_colr = a_Color;\n' +
-'}\n';
+var boxVert0 =
+    "attribute vec4 a_Position;\n" +
+    "attribute vec4 a_Color;\n" +
+    "uniform mat4 u_mvpMat;\n" +
+    "varying vec4 v_colr;\n" +
+    "void main() {\n" +
+    "   gl_Position = u_mvpMat * a_Position;\n" +
+    "   v_colr = a_Color;\n" +
+    "}\n";
 
-var boxFrag0 = 
-'precision mediump float;\n' +      
-'varying vec4 v_colr;\n' +
-'void main() {\n' +
-'   gl_FragColor = v_colr; \n' +
-'}\n';
+var boxFrag0 =
+    "precision mediump float;\n" +
+    "varying vec4 v_colr;\n" +
+    "void main() {\n" +
+    "   gl_FragColor = v_colr; \n" +
+    "}\n";
 
-var boxVert1 = 
-"attribute vec4 a_Position;\n" +
-"attribute vec2 a_TexCoord;\n" +
-"varying vec2 v_TexCoord;\n" +
-"void main() {\n" +
-"  gl_Position = a_Position;\n" +
-"  v_TexCoord = a_TexCoord;\n" +
-"}\n";
+var boxVert1 =
+    "attribute vec4 a_Position;\n" +
+    "attribute vec2 a_TexCoord;\n" +
+    "varying vec2 v_TexCoord;\n" +
+    "void main() {\n" +
+    "  gl_Position = a_Position;\n" +
+    "  v_TexCoord = a_TexCoord;\n" +
+    "}\n";
 
-var boxFrag1 = 
-"precision mediump float;\n" + 
-"uniform sampler2D u_Sampler;\n" +
-"varying vec2 v_TexCoord;\n" +
-"void main() {\n" +
-"  gl_FragColor = texture2D(u_Sampler, v_TexCoord);\n" +
-"}\n";
+var boxFrag1 =
+    "precision mediump float;\n" +
+    "uniform sampler2D u_Sampler;\n" +
+    "varying vec2 v_TexCoord;\n" +
+    "void main() {\n" +
+    "  gl_FragColor = texture2D(u_Sampler, v_TexCoord);\n" +
+    "}\n";
 
 var gl;
 var g_canvasID;
 var gui = new GUIbox();
 
-var preView = new VBObox0(boxVert0, boxFrag0, axis_vboArr0, 6); 
-var rayView = new VBObox1(boxVert1, boxFrag1, axis_vboArr1, 4); 
+var preView = new VBObox0(boxVert0, boxFrag0, axis_vboArr0, 6);
+var rayView = new VBObox1(boxVert1, boxFrag1, axis_vboArr1, 4);
 
 // ! Ray Tracer Objects
-var g_myPic = new CImgBuf(256, 256); // Create a floating-point image-buffer object to hold the image created by 'g_myScene' object.
+var g_myPic = new CImgBuf(512,512); // Create a floating-point image-buffer object to hold the image created by 'g_myScene' object.
 // CAUTION! use power-of-two size (256x256; 512x512, etc)
 // to ensure WebGL 1.0 texture-mapping works properly
-var g_myScene = new CScene(g_myPic); // Create our ray-tracing object;
+var g_myScene = new CScene(); // Create our ray-tracing object;
 // this contains our complete 3D scene & its camera
 // used to write a complete ray-traced image to the CImgBuf object 'g_myPic' given as argument.
 var g_SceneNum = 0; // scene-selector number; 0,1,2,... G_SCENE_MAX-1
@@ -82,7 +82,7 @@ var g_isJitter = 0; // ==1 for jitter, ==0 for no jitter.
 var g_lastMS = Date.now();
 
 function main() {
-    console.log("hello from main.js")
+    console.log("hello from main.js");
     g_canvasID = document.getElementById("webgl");
     gl = g_canvasID.getContext("webgl", { preserveDrawingBuffer: true });
 
@@ -93,25 +93,18 @@ function main() {
     gl.clearColor(0.2, 0.2, 0.2, 1);
     gl.enable(gl.DEPTH_TEST);
     gui.init();
+    g_myScene.initScene(1);
 
-    // test_glMatrix(); // Make sure you understand how glMatrix.js library works.
-
-    // Initialize each of our 'vboBox' objects:
     preView.init(gl); // VBO + shaders + uniforms + attribs for WebGL preview
     rayView.init(gl); //  "		"		" to display ray-traced on-screen result.
 
-    onBrowserResize(); 
+    onBrowserResize();
     drawAll();
 
-    // * ----------------------------------------------------------------------------
-    // NOTE! Our ray-tracer ISN'T 'animated' in the usual sense!
-    // --No 'tick()' function, no continual automatic re-drawing/refreshing.
-    // --Instead, call 'drawAll()' after user makes an on-screen change, e.g. after
-    // mouse drag, after mouse click, after keyboard input, and after ray-tracing.
-    // --You can also re-draw screen to show ray-tracer progress on-screen:
-    //  try calling drawAll() after ray-tracer finishes each set of 16 scanlines,
-    //  or perhaps re-draw after every 1-2 seconds of ray-tracing.
-    // * ----------------------------------------------------------------------------
+    g_myScene.makeRayTracedImage(); // run the ray-tracer
+    rayView.switchToMe(); // be sure OUR VBO & shaders are in use, then
+    rayView.reload(); // re-transfer VBO contents and texture-map contents
+    drawAll(); // re-draw BOTH viewports.
 }
 
 function onSceneButton() {
@@ -130,7 +123,7 @@ function onSceneButton() {
     drawAll();
 }
 
-/** 
+/**
  * Re-draw all WebGL contents in our browser window.
  * NOTE: this program doesn't have an animation loop!
  */
@@ -149,12 +142,16 @@ function drawAll() {
     preView.draw(); // draw our VBO's contents using our shaders.
 
     // * right
-    gl.viewport(gl.drawingBufferWidth / 2, 0, gl.drawingBufferWidth / 2, gl.drawingBufferHeight);
-    rayView.switchToMe(); 
-    rayView.adjust(); 
-    rayView.draw(); 
+    gl.viewport(
+        gl.drawingBufferWidth / 2,
+        0,
+        gl.drawingBufferWidth / 2,
+        gl.drawingBufferHeight
+    );
+    rayView.switchToMe();
+    rayView.adjust();
+    rayView.draw();
 }
-
 
 function print_mat4(a, nameStr) {
     //==============================================================================
@@ -408,33 +405,36 @@ function test_glMatrix() {
 function onSuperSampleButton() {
     //=============================================================================
     // advance to the next antialiasing mode.
-    //console.log('ON-SuperSample BUTTON!');
-    g_AAcode += 1;
-    if (g_AAcode > G_AA_MAX) g_AAcode = 1; // 1,2,3,4, 1,2,3,4, 1,2,... etc
-    // report it:
-    if (g_AAcode == 1) {
-        if (g_isJitter == 0) {
-            document.getElementById("AAreport").innerHTML =
-                "1 sample/pixel. No jitter.";
-            console.log("1 sample/pixel. No Jitter.");
-        } else {
-            document.getElementById("AAreport").innerHTML =
-                "1 sample/pixel, but jittered.";
-            console.log("1 sample/pixel, but jittered.");
+        //console.log('ON-SuperSample BUTTON!');
+      g_AAcode += 1;
+      if(g_AAcode > G_AA_MAX) g_AAcode = 1; // 1,2,3,4, 1,2,3,4, 1,2,... etc
+      // report it:
+      if(g_AAcode==1) {
+        if(g_isJitter==0) {
+              document.getElementById('AAreport').innerHTML = 
+              "1 sample/pixel. No jitter.";
+          console.log("1 sample/pixel. No Jitter.");
+        } 
+        else {
+              document.getElementById('AAreport').innerHTML = 
+              "1 sample/pixel, but jittered.";
+          console.log("1 sample/pixel, but jittered.")
+        } 
+      }
+      else { // g_AAcode !=1
+        if(g_isJitter==0) {
+              document.getElementById('AAreport').innerHTML = 
+              g_AAcode+"x"+g_AAcode+" Supersampling. No jitter.";
+          console.log(g_AAcode,"x",g_AAcode,"Supersampling. No Jitter.");
+        } 
+        else {
+              document.getElementById('AAreport').innerHTML = 
+              g_AAcode+"x"+g_AAcode+" JITTERED Supersampling";
+          console.log(g_AAcode,"x",g_AAcode," JITTERED Supersampling.");
         }
-    } else {
-        // g_AAcode !=1
-        if (g_isJitter == 0) {
-            document.getElementById("AAreport").innerHTML =
-                g_AAcode + "x" + g_AAcode + " Supersampling. No jitter.";
-            console.log(g_AAcode, "x", g_AAcode, "Supersampling. No Jitter.");
-        } else {
-            document.getElementById("AAreport").innerHTML =
-                g_AAcode + "x" + g_AAcode + " JITTERED Supersampling";
-            console.log(g_AAcode, "x", g_AAcode, " JITTERED Supersampling.");
-        }
+      }
     }
-}
+    
 
 function onJitterButton() {
     //=============================================================================
@@ -483,6 +483,6 @@ function onBrowserResize() {
         g_canvasID.width = innerWidth - 20; // (with 20-pixel margin)
         g_canvasID.height = 0.5 * innerWidth - 20; // (with 20-pixel margin)
     }
-    
-    drawAll(); 
+
+    drawAll();
 }

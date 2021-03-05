@@ -187,7 +187,6 @@ VBObox1.prototype.adjust = function () {
                 ".adjust() call you needed to call this.switchToMe()!!"
         );
     }
-   
 };
 
 /**
@@ -208,6 +207,13 @@ VBObox1.prototype.draw = function () {
  *  Over-write current values in the GPU inside our already-created VBO
  */
 VBObox1.prototype.reload = function () {
+    if (this.isReady() == false) {
+        console.log(
+            "ERROR! before" +
+                this.constructor.name +
+                ".reload() call you needed to call this.switchToMe()!!"
+        );
+    }
     gl.bufferSubData(
         gl.ARRAY_BUFFER, // GLenum target(same as 'bindBuffer()')
         0, // byte offset to where data replacement
