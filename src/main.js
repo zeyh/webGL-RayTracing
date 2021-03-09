@@ -15,9 +15,28 @@ References: besides the inline links, the code is modified from
     Done: camera setLookAt rayPerspective() and rayFrustum()
     Done: Add a grid-plane-like flat disk and/or a sphere 
     Done: CGeom: rayLoadIdentity(), rayTranslate(), rayRotate(), rayScale(), worldRay2model transform matrix & squash a object
+    => 25 + everything matches 30
+
+    ? user-adjustable antialiasing [7]
+    ? CGeom: 3 or more transformed spheres [5]
+    ? cylinder, cube, torus plus ray tracing [5]
+
+    TODO Adjustable Recursion Depth [5]
+    TODO Recursive Mirror Reflections [5]
+    TODO 2 or more Phong materials. [5]
+    TODO 4 distinct 3D Scenes [10]
+    TODO 2 more user-adjustable 3D light positions [10]
+    TODO 2 user-switchable point-light sources that cast overlapped shadows [7]
+    TODO More Geometric Shapes [5 each]
+    TODO Soft Shadows [5]
+    TODO Transparency with Refraction [10]
+
+    TODO Non-Phong light/material [10 each]
+    TODO Procedural Materials [5]
+    TODO Shape Distortions [5]
+
+    CCamera✅
     
-    ? DOING: user-adjustable antialiasing
-    ? CGeom: 
 
     Note: 
         console.log(JSON.parse(JSON.stringify(g_particleArray[index].s1)));

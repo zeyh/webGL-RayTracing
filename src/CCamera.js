@@ -1,4 +1,7 @@
 
+/** 
+ * change viewing point 
+ */
 function CCamera() {
     this.eyePt = vec4.fromValues(0, 0, 0, 1);
 
@@ -27,6 +30,9 @@ CCamera.prototype.setSize = function (nuXmax, nuYmax) {
     this.vfrac = (this.iTop - this.iBot) / this.ymax; // pixel tile's height.
 };
 
+/** 
+ * set rayFrustrum 
+ */
 CCamera.prototype.rayFrustum = function (left, right, bot, top, near) {
     this.iLeft = left;
     this.iRight = right;
@@ -71,7 +77,9 @@ CCamera.prototype.rayLookAt = function (nuEyePt, nuAimPt, nuUpVec) {
     vec3.cross(this.vAxis, this.nAxis, this.uAxis); // V-axis == N-axis cross U-axis
 };
     
-
+/** 
+ * specify a ray in world coordinates that originates at the camera's eyepoint 
+ */
 CCamera.prototype.setEyeRay = function (myeRay, xpos, ypos) {
     var posU = this.iLeft + xpos * this.ufrac; // U coord,
     var posV = this.iBot + ypos * this.vfrac; // V coord,
