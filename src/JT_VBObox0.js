@@ -596,9 +596,6 @@ VBObox0.prototype.adjust = function () {
     mat4.lookAt(camView, gui.camEyePt, gui.camAimPt, gui.camUpVec);
     mat4.multiply(this.mvpMat, camProj, camView);
 
-    var trans = vec3.fromValues(0, 0, -5);
-    mat4.translate(this.mvpMat, this.mvpMat, trans);
-
     gl.uniformMatrix4fv(this.u_mvpMatLoc, false, this.mvpMat);
 };
 

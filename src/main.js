@@ -36,7 +36,7 @@ References: besides the inline links, the code is modified from
     TODO Shape Distortions [5]
 
     CCamera✅
-    
+
 
     Note: 
         console.log(JSON.parse(JSON.stringify(g_particleArray[index].s1)));
@@ -87,10 +87,11 @@ var preView = new VBObox0(boxVert0, boxFrag0, axis_vboArr0, 6);
 var rayView = new VBObox1(boxVert1, boxFrag1, axis_vboArr1, 4);
 
 // ! Ray Tracer Objects
-var g_myPic = new CImgBuf(512,512); // Create a floating-point image-buffer object to hold the image created by 'g_myScene' object.
+var g_myPic = new CImgBuf(256,256); // Create a floating-point image-buffer object to hold the image created by 'g_myScene' object.
 // CAUTION! use power-of-two size (256x256; 512x512, etc)
 // to ensure WebGL 1.0 texture-mapping works properly
 var g_myScene = new CScene(); // Create our ray-tracing object;
+
 // this contains our complete 3D scene & its camera
 // used to write a complete ray-traced image to the CImgBuf object 'g_myPic' given as argument.
 var g_SceneNum = 0; // scene-selector number; 0,1,2,... G_SCENE_MAX-1
@@ -113,7 +114,8 @@ function main() {
     gl.enable(gl.DEPTH_TEST);
     gui.init();
     g_myScene.initScene(1);
-
+    g_myScene.makeRayTracedImage();
+    
     preView.init(gl); // VBO + shaders + uniforms + attribs for WebGL preview
     rayView.init(gl); //  "		"		" to display ray-traced on-screen result.
 

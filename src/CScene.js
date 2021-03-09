@@ -28,21 +28,21 @@ CScene.prototype.initScene = function (num) {
     // set up new scene:
     switch (num) {
         case 0:
-            this.item.push(new CGeom(PLANE)); // Append gnd-plane to item[] array
+            this.item.push(new CGeom(RT_GNDPLANE)); // Append gnd-plane to item[] array
             iNow = this.item.length - 1; // get its array index.
             break;
         case 1:
-            this.item.push(new CGeom(PLANE)); // Append gnd-plane to item[] array
+            this.item.push(new CGeom(RT_GNDPLANE)); // Append gnd-plane to item[] array
             iNow = this.item.length - 1; // get its array index.
 
             // * sphere
-            this.item.push(new CGeom(SPHERE)); 
+            this.item.push(new CGeom(RT_SPHERE)); 
             iNow = this.item.length -1;    
             this.item[iNow].setIdent();   
             this.item[iNow].rayTranslate(0,-1.0, 1.0); 
 
             // * sphere
-            this.item.push(new CGeom(SPHERE)); 
+            this.item.push(new CGeom(RT_SPHERE)); 
             iNow = this.item.length -1;    
             this.item[iNow].setIdent();   
             this.item[iNow].rayTranslate(-2,-1.0, 1.0); 

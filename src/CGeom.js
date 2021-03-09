@@ -1,13 +1,13 @@
-const PLANE = 0;
-const SPHERE = 1;
-const CUBE = 2;
+const RT_GNDPLANE = 0;
+const RT_SPHERE = 1;
+const RT_BOX = 2;
 
 function CGeom(shapeSelect) {
     if (shapeSelect == undefined) shapeSelect = PLANE; // default
     this.shapeType = shapeSelect;
 
     switch (this.shapeType) { //TODO:
-        case PLANE:
+        case RT_GNDPLANE:
             //set the ray-tracing function (so we call it using item[i].traceMe() )
             this.traceMe = function (inR, hit) {
                 this.traceGrid(inR, hit);
@@ -18,7 +18,7 @@ function CGeom(shapeSelect) {
             this.lineColor = vec4.fromValues(0.1, 0.5, 0.1, 1.0); // RGBA green(A==opacity)
             this.gapColor = vec4.fromValues(0.9, 0.9, 0.9, 1.0); // near-white
             break;
-        case SPHERE:
+        case RT_SPHERE:
             this.traceMe = function (inR, hit) {
                 this.traceSphere(inR, hit);
             };
