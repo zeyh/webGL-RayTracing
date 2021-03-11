@@ -21,9 +21,6 @@ function CGeom(shapeSelect) {
             this.traceMe = function (inR, hit) {
                 this.traceSphere(inR, hit);
             };
-            this.lineColor = vec4.fromValues(0.5, 0.5, 1.0, 1.0); // RGBA blue(A==opacity)
-            this.materialCode = MATL_DEFAULT; 
-            this.material = new Material(this.materialCode); 
             break;
         case RT_BOX:
             this.traceMe = function (inR, hit) {
@@ -137,7 +134,6 @@ CGeom.prototype.traceSphere = function(inRay, myHit) {
     // Now find surface normal: 
     vec4.transformMat4(myHit.surfNorm, vec4.fromValues(0,0,1,0), this.normal2world);
     vec4.normalize(myHit.surfNorm, myHit.surfNorm);
-    // TEMPORARY: sphere color-setting
     myHit.hitNum = 1;   // in CScene.makeRayTracedImage, use 'this.gapColor'
     
     // DIAGNOSTIC:---------------------------------------------------------------

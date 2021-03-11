@@ -16,6 +16,7 @@ function CHit() {
     this.isEntering = true; // true iff ray origin was OUTSIDE the hitGeom. for transparency
     this.modelHitPt = vec4.create(); // the 'hit point' in model coordinates.
     this.colr = vec4.clone(g_myScene.skyColor); // set default as 'sky'
+    this.init();
 }
 
 CHit.prototype.init = function () {
@@ -29,3 +30,7 @@ CHit.prototype.init = function () {
     vec4.copy(this.modelHitPt, this.hitPt); // the 'hit point' in model coordinates.
 };
 
+function CHitList(cRay){
+    this.ray = cRay;
+    this.hitList = [];
+}

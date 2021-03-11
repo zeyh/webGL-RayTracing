@@ -3,6 +3,50 @@
  */
 "use strict";
 
+var params = {
+    Lamp1PosX: 1.00,
+    Lamp1PosY: 4.00,
+    Lamp1PosZ: 4.00,
+    Lamp2PosX: 0.00,
+    Lamp2PosY: -4.00,
+    Lamp2PosZ: 0.00,
+}
+var datgui = new dat.GUI();
+datgui.close();
+function setControlPanel() {
+    datgui.add(params, 'Lamp1PosX', -10.0, 10.0).onChange(
+        function (value) {
+            g_lamp0.I_pos.elements[0] = value;
+        }
+    );
+    datgui.add(params, 'Lamp1PosY', -10.0, 10.0).onChange(
+        function (value) {
+            g_lamp0.I_pos.elements[1] = value;
+        }
+    );
+    datgui.add(params, 'Lamp1PosZ', -10.0, 10.0).onChange(
+        function (value) {
+            g_lamp0.I_pos.elements[2] = value;
+        }
+    );
+    datgui.add(params, 'Lamp2PosX', -10.0, 10.0).onChange(
+        function (value) {
+            g_lamp1.I_pos.elements[0] = value;
+        }
+    );
+    datgui.add(params, 'Lamp2PosY', -10.0, 10.0).onChange(
+        function (value) {
+            g_lamp1.I_pos.elements[1] = value;
+        }
+    );
+    datgui.add(params, 'Lamp2PosZ', -10.0, 10.0).onChange(
+        function (value) {
+            g_lamp1.I_pos.elements[2] = value;
+        }
+    );
+}
+
+
 /**
  *  capture and respond to all keyboard & mouse inputs/outputs.
  */

@@ -631,7 +631,7 @@ VBObox0.prototype.draw = function () {
     mat4.translate(this.mvpMat, this.mvpMat, vec3.fromValues(1.2, 1.4, 1.0));
     gl.uniformMatrix4fv(this.u_mvpMatLoc, false, this.mvpMat); 
     mat4.copy(this.mvpMat, tmp); 
-    gl.drawArrays(gl.TRIANGLE_STRIP,this.bgnCyl, this.bgnCyl2 - this.bgnCyl); 
+    gl.drawArrays(gl.LINE_STRIP,this.bgnCyl, this.bgnCyl2 - this.bgnCyl); 
 
     // * draw cylinder 2 - cone
     mat4.copy(this.mvpMat, tmp); 
@@ -639,7 +639,7 @@ VBObox0.prototype.draw = function () {
     mat4.scale(this.mvpMat, this.mvpMat, vec3.fromValues(1.0, 0.5, 1.0));
     gl.uniformMatrix4fv(this.u_mvpMatLoc, false, this.mvpMat); 
     mat4.copy(this.mvpMat, tmp); 
-    gl.drawArrays(gl.TRIANGLE_STRIP,this.bgnCyl2, this.vboVerts - this.bgnCyl2); 
+    gl.drawArrays(gl.LINE_STRIP,this.bgnCyl2, this.vboVerts - this.bgnCyl2); 
 
     mat4.copy(this.mvpMat, tmp); // RESTORE current value (needs push-down stack!)
 };

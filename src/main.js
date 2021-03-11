@@ -15,13 +15,12 @@ References: besides the inline links, the code is modified from
     Done: camera setLookAt rayPerspective() and rayFrustum()
     Done: Add a grid-plane-like flat disk and/or a sphere 
     Done: CGeom: rayLoadIdentity(), rayTranslate(), rayRotate(), rayScale(), worldRay2model transform matrix & squash a object
-    => 25 + everything matches 30
+    Done: user-adjustable antialiasing [7] #testing
+    => 37
 
     ? 2 more user-adjustable 3D light positions [10]
     TODO 2 user-switchable point-light sources that cast overlapped shadows [7]
 
-    ? user-adjustable antialiasing [7]
-    
     ? CGeom: 3 or more transformed spheres [5]
     TODO cylinder, cube, torus plus ray tracing [5]
 
@@ -84,6 +83,7 @@ var boxFrag1 =
 var gl;
 var g_canvasID;
 var gui = new GUIbox();
+setControlPanel();
 
 var preView = new VBObox0(boxVert0, boxFrag0, axis_vboArr0, 6);
 var rayView = new VBObox1(boxVert1, boxFrag1, axis_vboArr1, 4);
