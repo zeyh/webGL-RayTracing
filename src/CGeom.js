@@ -6,9 +6,8 @@ function CGeom(shapeSelect) {
     if (shapeSelect == undefined) shapeSelect = PLANE; // default
     this.shapeType = shapeSelect;
 
-    switch (this.shapeType) { //TODO:
+    switch (this.shapeType) {
         case RT_GNDPLANE:
-            //set the ray-tracing function (so we call it using item[i].traceMe() )
             this.traceMe = function (inR, hit) {
                 this.traceGrid(inR, hit);
             };
@@ -21,6 +20,14 @@ function CGeom(shapeSelect) {
         case RT_SPHERE:
             this.traceMe = function (inR, hit) {
                 this.traceSphere(inR, hit);
+            };
+            this.lineColor = vec4.fromValues(0.5, 0.5, 1.0, 1.0); // RGBA blue(A==opacity)
+            this.materialCode = MATL_DEFAULT; 
+            this.material = new Material(this.materialCode); 
+            break;
+        case RT_BOX:
+            this.traceMe = function (inR, hit) {
+                this.traceBox(inR, hit);
             };
             this.lineColor = vec4.fromValues(0.0, 0.3, 1.0, 1.0); // RGBA blue(A==opacity)
             break;
@@ -85,58 +92,37 @@ CGeom.prototype.traceSphere = function(inRay, myHit) {
     var rayT = new CRay();    // to create 'rayT', our local model-space ray.
     vec4.copy(rayT.orig, inRay.orig);   // memory-to-memory copy. 
     vec4.copy(rayT.dir, inRay.dir);
-                                // (DON'T do this: rayT = inRay; // that sets rayT
-                                // as a REFERENCE to inRay. Any change to rayT is
-                                // also a change to inRay (!!).
     vec4.transformMat4(rayT.orig, inRay.orig, this.worldRay2model);
     vec4.transformMat4(rayT.dir,  inRay.dir,  this.worldRay2model);
     
-    //------------------ Step 2: Test 1st triangle. Did ray MISS sphere entirely?
-    // Create r2s vector that reaches FROM ray's start-point TO the sphere center.
-    //  (subtract: model-space origin POINT - rayT origin POINT):
-    // (remember, in homogeneous coords w=1 for points, =0 for vectors)
     var r2s = vec4.create();
     vec4.subtract(r2s, vec4.fromValues(0,0,0,1), rayT.orig);
     // Find L2, the squared length of r2s, by dot-product with itself:
     var L2 = vec3.dot(r2s,r2s);   // NOTE: vec3.dot() IGNORES the 'w' values when 
-                                    //  vec4 arguments.  !Good! I like glMatrix...
-    // if L2 <=1.0, ray starts AT or INSIDE the unit sphere surface (!). 
-    if(L2 <= 1.0) { // report error and quit.  LATER we can use this case to
-                    // handle rays through transparent spheres.
+    if(L2 <= 1.0) { // report error and quit.  LATER we can use this case to handle rays through transparent spheres.
         console.log("CGeom.traceSphere() ERROR! rayT origin at or inside sphere!\n\n");
         return;       // HINT: see comments at end of this function.
     }
    
     var tcaS = vec3.dot(rayT.dir, r2s); // tcaS == SCALED tca;
-    
     if(tcaS < 0.0) {      // Is the chord mid-point BEHIND the camera(where t<0)?
-        return;             // YES!  rayT didn't start inside the sphere, so if
-        // MISSED!          // the chord mid-point is behind the camera, then
-    }                     // the entire chord is behind the camera: NO hit-points!
-                            // Don't change myHit, don't do any further calcs. Bye!
-                            // Don't change myHit hMISS! sphere is BEHIND the ray! 
-                            // No hit points. Bye!
+        return;            // YES!  rayT didn't start inside the sphere, so if
+    }                   
+                          
     
     var DL2 = vec3.dot(rayT.dir, rayT.dir);
     var tca2 = tcaS*tcaS / DL2;
-
-    // Next, use the Pythagorean theorem to find LM2; the squared distance from
-    // sphere center to chord mid-point:  L2 = LM2 + tca2, so LM2 = L2-tca2;
     var LM2 = L2 - tca2;  
     if(LM2 > 1.0) {   // if LM2 > radius^2, then chord mid-point is OUTSIDE the
-                        // sphere entirely.  Once again, our ray MISSED the sphere.
         return;         // DON'T change myHit, don't do any further calcs. Bye!
-        // MISSED!
     }
 
     var L2hc = (1.0 - LM2); // SQUARED half-chord length.
-    
     var t0hit = tcaS/DL2 -Math.sqrt(L2hc/DL2);  // closer of the 2 hit-points.
     if(t0hit > myHit.t0) {    // is this new hit-point CLOSER than 'myHit'?
         return;       // NO.  DON'T change myHit, don't do any further calcs. Bye!
     }
-    // YES! we found a better hit-point!
-    // Update myHit to describe it------------------------------------------------
+    
     myHit.t0 = t0hit;          // record ray-length, and
     myHit.hitGeom = this;      // record this CGeom object as the one we hit, and
     // Compute the x,y,z,w point where rayT hit the sphere in MODEL coords:
@@ -146,12 +132,9 @@ CGeom.prototype.traceSphere = function(inRay, myHit) {
     vec4.scaleAndAdd(myHit.hitPt, inRay.orig, inRay.dir, myHit.t0);
     // set 'viewN' member to the reversed, normalized inRay.dir vector:
     vec4.negate(myHit.viewN, inRay.dir); 
-    // ( CAREFUL! vec4.negate() changes sign of ALL components: x,y,z,w !!
     // inRay.dir MUST be a vector, not a point, to ensure w sign has no effect)
     vec4.normalize(myHit.viewN, myHit.viewN); // ensure a unit-length vector.
     // Now find surface normal: 
-    // in model space we know it's always +z,
-    // but we need to TRANSFORM the normal to world-space, & re-normalize it.
     vec4.transformMat4(myHit.surfNorm, vec4.fromValues(0,0,1,0), this.normal2world);
     vec4.normalize(myHit.surfNorm, myHit.surfNorm);
     // TEMPORARY: sphere color-setting

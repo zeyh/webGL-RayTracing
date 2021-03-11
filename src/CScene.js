@@ -83,18 +83,12 @@ CScene.prototype.makeRayTracedImage = function () {
     this.pixFlag = 0; // DIAGNOSTIC: g_myScene.pixFlag == 1 at just one pixel
     var myHit = new CHit(); // holds the nearest ray/grid intersection (if any)
 
+
+
     for (j = 0; j < this.imgBuf.ySiz; j++) {// for the j-th row of pixels.
         for (i = 0; i < this.imgBuf.xSiz; i++) { // and the i-th pixel on that row,
 
-            let tmp = 4;
-            for(let n=0; n < tmp; n++){
-                var i_rand = i + 1/tmp * (Math.random() + n);
-                var j_rand = j + 1/tmp * (Math.random() + n);
-                this.rayCam.setEyeRay(this.eyeRay, i_rand, j_rand); // create ray for pixel (i,j)
-
-            }
-            // this.rayCam.setEyeRay(this.eyeRay, i, j); // create ray for pixel (i,j)
-
+            this.rayCam.setEyeRay(this.eyeRay, i, j); // create ray for pixel (i,j)
             
             if (i == this.imgBuf.xSiz / 2 && j == this.imgBuf.ySiz / 4) {
                 this.pixFlag = 1; // pixFlag==1 for JUST ONE pixel
@@ -103,23 +97,16 @@ CScene.prototype.makeRayTracedImage = function () {
                 this.pixFlag = 0;
             } 
 
-            // Trace a new eyeRay thru all CGeom items: ------------------------------
             myHit.init(); // start by clearing our 'nearest hit-point', and
             for (k = 0; k < this.item.length; k++) {// for every CGeom in item[] array,
                 this.item[k].traceMe(this.eyeRay, myHit); // trace eyeRay thru it,
             } // & keep nearest hit point in myHit.
 
-            /*
-            if(this.pixFlag == 1) { // print values during just one selected pixel
-                console.log("flag: x,y:myHit", i,j, myHit);
-            }
-            */
-
-            // Find eyeRay color from myHit-----------------------------------------
-            if (myHit.hitNum == 0) { // use myGrid tracing to determine color
+            if (myHit.hitNum == 0) { 
                 vec4.copy(colr, myHit.hitGeom.gapColor);
             } else if (myHit.hitNum == 1) {
-                vec4.copy(colr, myHit.hitGeom.lineColor);
+                let currColor = this.getColor(myHit);
+                vec4.copy(colr, currColor);
             } else { // if myHit.hitNum== -1)
                 vec4.copy(colr, this.skyColor);
             }
@@ -133,3 +120,132 @@ CScene.prototype.makeRayTracedImage = function () {
     }
     this.imgBuf.float2int(); // create integer image from floating-point buffer.
 };
+
+var g_headLightOn = true;
+var g_worldLightOn = false;
+CScene.prototype.getColor = function(myHit){
+    let color0 = vec4.create();
+    let color1 = vec4.create();
+
+    if(g_headLightOn == true){
+        globalThis.TOPLIGHT = 0;
+        let light0 = new Light(TOPLIGHT);
+        light0.getColor(myHit);
+        color0 = light0.pixelColor;
+    }
+    if(g_worldLightOn == true){
+        globalThis.WORLDLIGHT = 1;
+        let light1 = new Light(WORLDLIGHT);
+        light1.getColor(myHit);
+        color1 = light1.pixelColor;
+
+    }
+    vec4.add(color1, color0, color1);
+    // console.log(color1)
+    // console.log(break1)
+
+    return color1;
+}
+
+
+var g_lamp0 = new LightsT(); //world-light
+var g_lamp1 = new LightsT(); //another light source
+var g_matl0 = new Material();
+g_matl0.setMatl(0);
+
+function Light(idx){
+    this.setDefaultLight();
+    if(idx == 0){
+        this.I_pos = vec4.fromValues(g_lamp0.I_pos.elements[0], g_lamp0.I_pos.elements[1], g_lamp0.I_pos.elements[2], 1.0);
+        this.I_ambi = vec4.fromValues(g_lamp0.I_ambi.elements[0], g_lamp0.I_ambi.elements[1], g_lamp0.I_ambi.elements[2], 1.0);
+        this.I_diff = vec4.fromValues(g_lamp0.I_diff.elements[0], g_lamp0.I_diff.elements[1], g_lamp0.I_diff.elements[2], 1.0);
+        this.I_spec = vec4.fromValues(g_lamp0.I_spec.elements[0], g_lamp0.I_spec.elements[1], g_lamp0.I_spec.elements[2], 1.0);
+    }
+    else{
+        this.I_pos = vec4.fromValues(g_lamp1.I_pos.elements[0], g_lamp1.I_pos.elements[1], g_lamp1.I_pos.elements[2], 1.0);
+        this.I_ambi = vec4.fromValues(g_lamp1.I_ambi.elements[0], g_lamp1.I_ambi.elements[1], g_lamp1.I_ambi.elements[2], 1.0);
+        this.I_diff = vec4.fromValues(g_lamp1.I_diff.elements[0], g_lamp1.I_diff.elements[1], g_lamp1.I_diff.elements[2], 1.0);
+        this.I_spec = vec4.fromValues(g_lamp1.I_spec.elements[0], g_lamp1.I_spec.elements[1], g_lamp1.I_spec.elements[2], 1.0);
+    }
+    this.setDefaultMat();
+    this.pixelColor = vec4.create();
+}
+
+Light.prototype.getColor = function(myHit){
+    // console.log(myHit.hitPt, myHit.viewN, myHit.surfNorm);
+    //vec3 normal = normalize(v_Normal); \n' +
+    this.normal = vec4.create();
+    vec4.normalize(this.normal, myHit.surfNorm);
+    //vec3 lightDirection = normalize(u_LampSet[0].pos - v_Position.xyz);\n' +
+    this.lightDirection = vec4.create();
+    vec4.subtract(this.lightDirection, this.I_pos, myHit.hitPt);
+    vec4.normalize(this.lightDirection, this.lightDirection);
+
+    //vec3 eyeDirection = normalize(u_eyePosWorld - v_Position.xyz); \n' +
+    this.eyeDirection = vec4.create();
+    vec4.subtract(this.eyeDirection, myHit.viewN, myHit.hitPt);
+    vec4.normalize(this.eyeDirection, this.eyeDirection);
+
+    //float nDotL = max(dot(lightDirection, normal), 0.0); \n' +
+    let nDotL0= vec4.create();
+    vec4.add(nDotL0, this.lightDirection, this.eyeDirection);
+    nDotL0 = vec4.dot(nDotL0, this.normal);
+    this.nDotL = Math.max(nDotL0,0);
+
+    //vec3 H = normalize(lightDirection + eyeDirection); \n' +
+    let H = vec4.create();
+    vec4.add(H, this.lightDirection, this.eyeDirection);
+    vec4.normalize(H, H);
+    //float nDotH = max(dot(H, normal), 0.0); \n' +
+    this.nDotH = Math.max(vec4.dot(H, this.normal),0);
+    //float e64 = pow(nDotH, float(u_MatlSet[0].shiny));\n' 
+    this.e64 = Math.pow(this.nDotH, this.KShiny);
+
+    /** 
+    '  vec3 emissive = u_MatlSet[0].emit;' +
+    '  vec3 ambient = u_LampSet[0].ambi * u_MatlSet[0].ambi;\n' +
+    '  vec3 diffuse = u_LampSet[0].diff * v_Kd * nDotL;\n' +
+    '  vec3 speculr = u_LampSet[0].spec * u_MatlSet[0].spec * e64;\n' + 
+     */
+    this.emissive = vec4.create();
+    this.ambient = vec4.create();
+    this.diffuse = vec4.create();
+    this.speculr = vec4.create();
+    vec4.copy(this.emissive, this.Ke);
+    vec4.multiply(this.ambient, this.I_ambi, this.Ka);
+    vec4.multiply(this.diffuse, this.I_diff, this.Kd);
+    vec4.scale(this.diffuse,this.diffuse,this.nDotL);
+    vec4.multiply(this.speculr, this.I_spec, this.Ks);
+    vec4.scale(this.speculr, this.speculr, this.e64);
+
+    //  gl_FragColor = vec4(emissive + ambient + diffuse + speculr + ambient2 + diffuse2 + speculr2 , 1.0);\n' +
+
+    vec4.add(this.pixelColor, this.pixelColor, this.emissive);
+    vec4.add(this.pixelColor, this.pixelColor, this.ambient);
+    vec4.add(this.pixelColor, this.pixelColor, this.diffuse);
+    vec4.add(this.pixelColor, this.pixelColor, this.speculr);
+
+    // console.log(this.pixelColor)
+    // console.log(break1)
+}
+
+Light.prototype.setDefaultLight = function(){
+    //worldlight
+    g_lamp0.I_pos.elements.set( [-3.0, 5.0, 8.0]);
+    g_lamp0.I_ambi.elements.set([0.6, 0.6, 0.6]);
+    g_lamp0.I_diff.elements.set([1.0, 1.0, 1.0]);
+    g_lamp0.I_spec.elements.set([1.0, 1.0, 1.0]);
+
+    //headlight
+    g_lamp1.I_pos.elements.set([0.0, 6.0, 0.0]);
+    g_lamp1.I_ambi.elements.set([0.4, 0.4, 0.4]);
+    g_lamp1.I_diff.elements.set([1.0, 1.0, 1.0]);
+    g_lamp1.I_spec.elements.set([1.0, 1.0, 1.0]);
+}
+Light.prototype.setDefaultMat = function(){
+    this.Ka = vec4.fromValues(g_matl0.K_ambi[0],g_matl0.K_ambi[1],g_matl0.K_ambi[2],g_matl0.K_ambi[3]);
+    this.Kd = vec4.fromValues(g_matl0.K_diff[0],g_matl0.K_diff[1],g_matl0.K_diff[2],g_matl0.K_diff[3]);
+    this.Ks = vec4.fromValues(g_matl0.K_spec[0],g_matl0.K_spec[1],g_matl0.K_spec[2],g_matl0.K_spec[3]);
+    this.Ke = vec4.fromValues(g_matl0.K_emit[0],g_matl0.K_emit[1],g_matl0.K_emit[2],g_matl0.K_emit[3]);
+    this.KShiny = g_matl0.K_shiny;
+}

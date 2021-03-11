@@ -17,16 +17,18 @@ References: besides the inline links, the code is modified from
     Done: CGeom: rayLoadIdentity(), rayTranslate(), rayRotate(), rayScale(), worldRay2model transform matrix & squash a object
     => 25 + everything matches 30
 
+    ? 2 more user-adjustable 3D light positions [10]
+    TODO 2 user-switchable point-light sources that cast overlapped shadows [7]
+
     ? user-adjustable antialiasing [7]
+    
     ? CGeom: 3 or more transformed spheres [5]
-    ? cylinder, cube, torus plus ray tracing [5]
+    TODO cylinder, cube, torus plus ray tracing [5]
 
     TODO Adjustable Recursion Depth [5]
     TODO Recursive Mirror Reflections [5]
     TODO 2 or more Phong materials. [5]
     TODO 4 distinct 3D Scenes [10]
-    TODO 2 more user-adjustable 3D light positions [10]
-    TODO 2 user-switchable point-light sources that cast overlapped shadows [7]
     TODO More Geometric Shapes [5 each]
     TODO Soft Shadows [5]
     TODO Transparency with Refraction [10]
@@ -507,3 +509,94 @@ function onBrowserResize() {
 
     drawAll();
 }
+
+// from 351-1-C
+var phongVert = 
+"struct MatlT {\n" +
+"		vec3 emit;\n" + // Ke: emissive -- surface 'glow' amount (r,g,b);
+"		vec3 ambi;\n" + // Ka: ambient reflectance (r,g,b)
+"		vec3 diff;\n" + // Kd: diffuse reflectance (r,g,b)
+"		vec3 spec;\n" + // Ks: specular reflectance (r,g,b)
+"		int shiny;\n" + // Kshiny: specular exponent (integer >= 1; typ. <200)
+"		};\n" +
+"attribute vec4 a_Position; \n" +
+"attribute vec4 a_Normal; \n" +
+// 	'uniform vec3 u_Kd; \n' +	//reflect entire sphere	 Later: as vertex attrib
+"uniform MatlT u_MatlSet[1];\n" + // Array of all materials.
+"uniform mat4 u_MvpMatrix; \n" +
+"uniform mat4 u_ModelMatrix; \n" +
+"uniform mat4 u_NormalMatrix; \n" +
+
+//-------------VARYING:Vertex Shader values sent per-pixel to Fragment shader:
+"varying vec3 v_Kd; \n" + // Phong Lighting: diffuse reflectance
+"varying vec4 v_Position; \n" +
+"varying vec3 v_Normal; \n" + // Why Vec3? its not a point, hence w==0
+
+"void main() { \n" +
+"  gl_Position = u_MvpMatrix * a_Position;\n" +
+"  v_Position = u_ModelMatrix * a_Position; \n" +
+"  v_Normal = normalize(vec3(u_NormalMatrix * a_Normal));\n" +
+"  v_Kd = u_MatlSet[0].diff; \n" + // find per-pixel diffuse reflectance from per-vertex
+"}\n";
+
+var PhongFrag = 
+    'precision highp float;\n' +
+    'precision highp int;\n' +
+  
+    //--------------- GLSL Struct Definitions:
+    'struct LampT {\n' +		// Describes one point-like Phong light source
+    '	vec3 pos;\n' +			// (x,y,z,w); w==1.0 for local light at x,y,z position
+    ' 	vec3 ambi;\n' +			// Ia ==  ambient light source strength (r,g,b)
+    ' 	vec3 diff;\n' +			// Id ==  diffuse light source strength (r,g,b)
+    '	vec3 spec;\n' +			// Is == specular light source strength (r,g,b)
+    '}; \n' +
+
+    'struct MatlT {\n' +		// Describes one Phong material by its reflectances:
+    '		vec3 emit;\n' +			// Ke: emissive -- surface 'glow' amount (r,g,b);
+    '		vec3 ambi;\n' +			// Ka: ambient reflectance (r,g,b)
+    '		vec3 diff;\n' +			// Kd: diffuse reflectance (r,g,b)
+    '		vec3 spec;\n' + 		// Ks: specular reflectance (r,g,b)
+    '		int shiny;\n' +			// Kshiny: specular exponent (integer >= 1; typ. <200)
+    '		};\n' +
+
+    //-------------UNIFORMS: values set from JavaScript before a drawing command.
+    'uniform LampT u_LampSet[2];\n' +		// Array of all light sources.
+    'uniform MatlT u_MatlSet[1];\n' +		// Array of all materials.
+    'uniform vec3 u_eyePosWorld; \n' + 	// Camera/eye location in world coords.
+
+    //-------------VARYING:Vertex Shader values sent per-pixel to Fragment shader: 
+    'varying vec3 v_Normal;\n' +			// Find 3D surface normal at each pix
+    'varying vec4 v_Position;\n' +			// pixel's 3D pos too -- in 'world' coords
+    'varying vec3 v_Kd;	\n' +			    // Find diffuse reflectance K_d per pix
+
+    'void main() { \n' +
+    '  vec3 normal = normalize(v_Normal); \n' +
+    '  vec3 eyeDirection = normalize(u_eyePosWorld - v_Position.xyz); \n' +
+
+    // Light Source 1
+    '  vec3 lightDirection = normalize(u_LampSet[0].pos - v_Position.xyz);\n' +
+    '  float nDotL = max(dot(lightDirection, normal), 0.0); \n' +
+    // ? vvvvvvvvvvvvvvvvvvvvvvvv
+    '  vec3 H = normalize(lightDirection + eyeDirection); \n' +
+    '  float nDotH = max(dot(H, normal), 0.0); \n' +
+    '  float e64 = pow(nDotH, float(u_MatlSet[0].shiny));\n' + // pow() won't accept integer exponents! Convert K_shiny!  
+    // ? ^^^^^^^^^^^^^^^^^^^^^^^^
+    '  vec3 emissive = u_MatlSet[0].emit;' +
+    '  vec3 ambient = u_LampSet[0].ambi * u_MatlSet[0].ambi;\n' +
+    '  vec3 diffuse = u_LampSet[0].diff * v_Kd * nDotL;\n' +
+    '  vec3 speculr = u_LampSet[0].spec * u_MatlSet[0].spec * e64;\n' +
+
+    //Light Source 2 (headlight)
+    '  vec3 lightDirection2 = normalize(u_LampSet[1].pos - v_Position.xyz);\n' +
+    '  float nDotL2 = max(dot(lightDirection2, normal), 0.0); \n' +
+    // ? vvvvvvvvvvvvvvvvvvvvvvvv
+    '  vec3 H2 = normalize(lightDirection2 + eyeDirection); \n' +
+    '  float nDotH2 = max(dot(H2, normal), 0.0); \n' +
+    '  float e64_2 = pow(nDotH2, float(u_MatlSet[0].shiny));\n' + // pow() won't accept integer exponents! Convert K_shiny!  
+    // ? ^^^^^^^^^^^^^^^^^^^^^^^^
+    '  vec3 ambient2 = u_LampSet[1].ambi * u_MatlSet[0].ambi;\n' +
+    '  vec3 diffuse2 = u_LampSet[1].diff * v_Kd * nDotL2;\n' +
+    '  vec3 speculr2 = u_LampSet[1].spec * u_MatlSet[0].spec * e64_2;\n' +
+
+    '  gl_FragColor = vec4(emissive + ambient + diffuse + speculr + ambient2 + diffuse2 + speculr2 , 1.0);\n' +
+    '}\n';
