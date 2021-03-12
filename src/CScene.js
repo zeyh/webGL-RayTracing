@@ -42,11 +42,11 @@ CScene.prototype.initScene = function (num) {
             this.item[iNow].rayTranslate(0,-1.0, 1.0); 
 
             // * sphere
-            this.item.push(new CGeom(RT_SPHERE)); 
+            this.item.push(new CGeom(RT_BOX)); 
             iNow = this.item.length -1;    
             this.item[iNow].setIdent();   
             this.item[iNow].rayTranslate(-2,-1.0, 1.0); 
-            this.item[iNow].rayScale(0.2, 0.2, 1.0); 
+            this.item[iNow].rayScale(0.1, 0.1, 0.1); 
 
             break;
         case 2:
@@ -81,8 +81,6 @@ CScene.prototype.makeRayTracedImage = function () {
     var k; // item[] index; selects CGeom object we're currently tracing.
 
     this.pixFlag = 0; // DIAGNOSTIC: g_myScene.pixFlag == 1 at just one pixel
-    // var myHit = new CHit(); // holds the nearest ray/grid intersection (if any)
-
 
     for (j = 0; j < this.imgBuf.ySiz; j++) {// for the j-th row of pixels.
         for (i = 0; i < this.imgBuf.xSiz; i++) { // and the i-th pixel on that row,
@@ -101,7 +99,9 @@ CScene.prototype.makeRayTracedImage = function () {
                         hits.hitList.push(myHit);
                         this.item[k].traceMe(this.eyeRay, myHit); // trace eyeRay thru it,
                     } // & keep nearest hit point in myHit.
-                    vec4.add(colr, colr, this.getColor(hits, this.rayCam.eyePt));
+                    if (hits.hitList.length > 0){
+                        vec4.add(colr, colr, this.getColor(hits, this.rayCam.eyePt));
+                    }
                 }
             }
             vec4.scale(colr, colr, 1/(g_AAcode*g_AAcode)); 
@@ -126,13 +126,6 @@ function calDist(hits, i){
 }
 
 CScene.prototype.getColor = function(hits, eyePos){
-    let myHitIdx = 0;
-    for (let i=0; i < hits.hitList.length; i++) {
-        if (calDist(hits, i) < calDist(hits, myHitIdx)) {
-            myHitIdx = i;
-        }
-    }
-    let myHit = hits.hitList[myHitIdx];
     let color0 = vec4.create();
     let color1 = vec4.create();
     globalThis.HEADLIGHT = 0;
@@ -142,14 +135,24 @@ CScene.prototype.getColor = function(hits, eyePos){
     let light1 = new Light(WORLDLIGHT);
     light1.updateLightPos();
 
+    let myHitIdx = 0;
+    for (let i=0; i < hits.hitList.length; i++) {
+        if (calDist(hits, i) < calDist(hits, myHitIdx)) {
+            myHitIdx = i;
+        }
+    }
+    let myHit = hits.hitList[myHitIdx];
 
-    if(g_headLightOn && !this.isShadow(myHit, HEADLIGHT)){
+    if(g_headLightOn && !this.isShadow(myHit, HEADLIGHT, hits)){
         light0.getColor(myHit, eyePos);
         color0 = light0.pixelColor;
     }
-    if(g_worldLightOn && !this.isShadow(myHit, WORLDLIGHT)){
+    if(g_worldLightOn && !this.isShadow(myHit, WORLDLIGHT, hits)){
         light1.getColor(myHit, eyePos);
         color1 = light1.pixelColor;
+    }
+    else{
+        color1 = vec4.fromValues(0,0,0,1);
     }
     vec4.add(color1, color0, color1);
 
@@ -159,7 +162,7 @@ CScene.prototype.getColor = function(hits, eyePos){
     return color1;
 }
 
-CScene.prototype.isShadow = function(myHit, lightIdx){
+CScene.prototype.isShadow = function(myHit, lightIdx, hits){
     let isInShadow = false;
 
     //get a copy of current pos and light
@@ -175,20 +178,19 @@ CScene.prototype.isShadow = function(myHit, lightIdx){
     vec4.normalize(rayDir, rayDir);
 
     let curHitList = new CHitList(curRay);
-    for (let h = 0; h < curHitList.hitList.length; h++){
-        for (k = 0; k < this.item.length; k++) {// for every CGeom in item[] array,
-            let curHit = new CHit(); 
-            curHitList.hitList.push(curHit);
-            this.item[k].traceMe(this.eyeRay, curHit); // trace eyeRay thru it,
-        } 
-    }
-    // curHitList.hitList = curHitList.hitList.sort(sortingScheme);
+    for (k = 0; k < this.item.length; k++) {// for every CGeom in item[] array,
+        let curHit = new CHit(); 
+        curHitList.hitList.push(curHit);
+        this.item[k].traceMe(this.eyeRay, curHit); // trace eyeRay thru it,
+    } 
 
-    if (myHit.t0 < (curLightPos[0] - curLight[0])/rayDir[0]){
-        isInShadow = true;
-        console.log("12")
+    // curHitList.hitList[i].hitGeom.shapeType != myHit.hitGeom.shapeType
+    //       && 
+    for (var i = 0; i < curHitList.hitList.length; i++){
+        if (  curHitList.hitList[i].t0 < (curLightPos[0] - myHit.modelHitPt[0])/rayDir[0]){
+                isInShadow = true;
+        }
     }
-    
     return isInShadow;
 }
 
@@ -197,18 +199,17 @@ function sortingScheme(h1,h2){
 }
 
 
-CScene.prototype.getReflect = function(){
+CScene.prototype.getReflect = function(myHit){
     for(let iter = 0; iter< g_recurDepth; iter++) {
         let rRay = new CRay();
         vec4.copy(rRay.orig, myHit.hitPt);
+        vec4.copy(reflectRay.dir, myHit.reflRay);
         let rRayDir = vec4.create();
         rRay.dir = this.reflect(rRayDir, normal)
 
-        var rHit = new CHit(); 
-        rHit.init(); 
-        for (k = 0; k < this.item.length; k++) {
-            this.item[k].traceMe(rRay, rHit); 
-        } 
+        // for (k = 0; k < this.item.length; k++) {
+        //     this.item[k].traceMe(rRay, rHit); 
+        // } 
 
         let reflective = this.getColor(rHit, reflectDepth-1);
         vec4.scaleAndAdd(color, color, reflective, this.KShiny/g_falloff);

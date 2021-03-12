@@ -85,6 +85,18 @@ var g_canvasID;
 var gui = new GUIbox();
 setControlPanel();
 
+function lightOn(idx){
+    console.log(idx)
+    if(idx == 1){
+        g_headLightOn = !g_headLightOn;
+        document.getElementById("light1").innerHTML = g_headLightOn ? "Turn Light 1 Off" : "Turn Light 1 On"
+    }
+    else{
+        g_worldLightOn = !g_worldLightOn;
+        document.getElementById("light2").innerHTML = g_worldLightOn ? "Turn Light 2 Off" : "Turn Light 2 On"
+
+    }
+}
 var preView = new VBObox0(boxVert0, boxFrag0, axis_vboArr0, 6);
 var rayView = new VBObox1(boxVert1, boxFrag1, axis_vboArr1, 4);
 

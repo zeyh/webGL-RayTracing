@@ -4,6 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <title>Proj B</title> <!-- Keep it short: title appears on browser tab-->
+    <style>#datgui { float:left; }</style>
 </head>
 
 <body onload="main()" onresize="onBrowserResize()">
@@ -18,6 +19,8 @@
     <span id='AAreport'> 1 sample/pixel. No jitter. </span>
     <br>
     <button type="button" onclick="onSceneButton()">Change Scene</button>
+    <button type="button" onclick="lightOn(1)" id="light1">Turn Light 1 Off</button>
+    <button type="button" onclick="lightOn(2)" id="light2">Turn Light 1 Off</button>
     <span id='SceneReport'> Show Scene Number 0 </span>
 
     <br>

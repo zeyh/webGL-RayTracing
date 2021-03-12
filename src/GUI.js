@@ -11,8 +11,9 @@ var params = {
     Lamp2PosY: -4.00,
     Lamp2PosZ: 0.00,
 }
-var datgui = new dat.GUI();
-datgui.close();
+var datgui = new dat.GUI( );
+datgui.domElement.id = 'datgui';
+// datgui.close();
 function setControlPanel() {
     datgui.add(params, 'Lamp1PosX', -10.0, 10.0).onChange(
         function (value) {

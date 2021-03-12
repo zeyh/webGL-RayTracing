@@ -29,7 +29,7 @@ CHit.prototype.init = function () {
     this.isEntering = true; // true iff ray origin was OUTSIDE the hitGeom.
     vec4.copy(this.modelHitPt, this.hitPt); // the 'hit point' in model coordinates.
 };
-
+  
 function CHitList(cRay){
     this.ray = cRay;
     this.hitList = [];
