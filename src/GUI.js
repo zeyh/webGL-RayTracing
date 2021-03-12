@@ -19,7 +19,7 @@ function setControlPanel() {
             g_lamp0.I_pos.elements[0] = value;
         }
     );
-    datgui.add(params, 'Lamp1PosY', -10.0, 10.0).onChange(
+    datgui.add(params, 'Lamp1PosY', -20.0, 20.0).onChange(
         function (value) {
             g_lamp0.I_pos.elements[1] = value;
         }
@@ -34,7 +34,7 @@ function setControlPanel() {
             g_lamp1.I_pos.elements[0] = value;
         }
     );
-    datgui.add(params, 'Lamp2PosY', -10.0, 10.0).onChange(
+    datgui.add(params, 'Lamp2PosY', -20.0, 20.0).onChange(
         function (value) {
             g_lamp1.I_pos.elements[1] = value;
         }

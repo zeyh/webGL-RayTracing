@@ -14,8 +14,6 @@ function CGeom(shapeSelect) {
             this.xgap = 1.0; // line-to-line spacing
             this.ygap = 1.0;
             this.lineWidth = 0.1; // fraction of xgap used for grid-line width
-            this.lineColor = vec4.fromValues(0.1, 0.5, 0.1, 1.0); // RGBA green(A==opacity)
-            this.gapColor = vec4.fromValues(0.9, 0.9, 0.9, 1.0); // near-white
             break;
         case RT_SPHERE:
             this.traceMe = function (inR, hit) {
@@ -44,7 +42,6 @@ CGeom.prototype.traceGrid = function (inRay, myHit) {
     var rayT = new CRay(); // create a local transformed-ray variable.
 
     vec4.transformMat4(rayT.orig, inRay.orig, this.worldRay2model);
-
     vec4.transformMat4(rayT.dir, inRay.dir, this.worldRay2model);
     var t0 = -rayT.orig[2] / rayT.dir[2];
    
@@ -71,6 +68,7 @@ CGeom.prototype.traceGrid = function (inRay, myHit) {
     if (loc % 1 < this.lineWidth) {
         // fractional part of loc < linewidth?
         myHit.hitNum = 1; // YES. rayT hit a line of constant-x
+        g_matl0.setMatl(3);
         return;
     }
     loc = myHit.modelHitPt[1] / this.ygap; // how many 'ygaps' from origin?
@@ -78,8 +76,10 @@ CGeom.prototype.traceGrid = function (inRay, myHit) {
     if (loc % 1 < this.lineWidth) {
         // fractional part of loc < linewidth?
         myHit.hitNum = 1; // YES. rayT hit a line of constant-y
+        g_matl0.setMatl(3);
         return;
     }
+    g_matl0.setMatl(5);
     myHit.hitNum = 0; // No.
     return;
 };
@@ -135,7 +135,8 @@ CGeom.prototype.traceSphere = function(inRay, myHit) {
     vec4.transformMat4(myHit.surfNorm, vec4.fromValues(0,0,1,0), this.normal2world);
     vec4.normalize(myHit.surfNorm, myHit.surfNorm);
     myHit.hitNum = 1;   // in CScene.makeRayTracedImage, use 'this.gapColor'
-    
+    g_matl0.setMatl(2);
+
     // DIAGNOSTIC:---------------------------------------------------------------
     if(g_myScene.pixFlag ==1) {   // did we reach the one 'flagged' pixel
                                     // chosen in CScene.makeRayTracedImage()?

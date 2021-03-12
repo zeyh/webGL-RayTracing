@@ -66,65 +66,45 @@ CScene.prototype.initScene = function (num) {
             this.initScene(0); // init the default scene.
             break;
     }
-};;
+};
 
+var HITMAX = 5;
 CScene.prototype.makeRayTracedImage = function () {
     this.rayCam.rayPerspective(gui.camFovy, gui.camAspect, gui.camNear);
     this.rayCam.rayLookAt(gui.camEyePt, gui.camAimPt, gui.camUpVec);
 
     this.setImgBuf(this.imgBuf); // just in case: this ensures our ray-tracer
 
-    var colr = vec4.create(); // floating-point RGBA color value
     var hit = 0;
     var idx = 0; // CImgBuf array index(i,j) == (j*this.xSiz + i)*this.pixSiz
     var i, j; // pixel x,y coordinate (origin at lower left; integer values)
     var k; // item[] index; selects CGeom object we're currently tracing.
 
     this.pixFlag = 0; // DIAGNOSTIC: g_myScene.pixFlag == 1 at just one pixel
-    var myHit = new CHit(); // holds the nearest ray/grid intersection (if any)
+    // var myHit = new CHit(); // holds the nearest ray/grid intersection (if any)
 
 
     for (j = 0; j < this.imgBuf.ySiz; j++) {// for the j-th row of pixels.
         for (i = 0; i < this.imgBuf.xSiz; i++) { // and the i-th pixel on that row,
-
+            var colr = vec4.create(); // floating-point RGBA color value
             for(let n0 = 0; n0 < g_AAcode; n0++){
                 for(let n1 = 0; n1 < g_AAcode; n1++){
+                    this.eyeRay = new CRay();
                     let randX = g_isJitter ? Math.random() : 0.5;
                     let randY = g_isJitter ? Math.random() : 0.5;
                     let posX = i + (n0 + randX)/g_AAcode - 0.5; 
                     let posY = j + (n1 + randY)/g_AAcode - 0.5; 
                     this.rayCam.setEyeRay(this.eyeRay, posX, posY); // create ray for pixel (i,j)
+                    let hits = new CHitList(this.eyeRay);
+                    for (k = 0; k < this.item.length; k++) {// for every CGeom in item[] array,
+                        let myHit = new CHit(); 
+                        hits.hitList.push(myHit);
+                        this.item[k].traceMe(this.eyeRay, myHit); // trace eyeRay thru it,
+                    } // & keep nearest hit point in myHit.
+                    vec4.add(colr, colr, this.getColor(hits, this.rayCam.eyePt));
                 }
             }
-            
-            if (i == this.imgBuf.xSiz / 2 && j == this.imgBuf.ySiz / 4) {
-                this.pixFlag = 1; // pixFlag==1 for JUST ONE pixel
-                console.log( "CScene.makeRayTracedImage() is at pixel [",i, ", ",j, "].","by the cunning use of flags. (Eddie Izzard)");
-            } else {
-                this.pixFlag = 0;
-            } 
-
-            myHit.init(); // start by clearing our 'nearest hit-point', and
-            for (k = 0; k < this.item.length; k++) {// for every CGeom in item[] array,
-                this.item[k].traceMe(this.eyeRay, myHit); // trace eyeRay thru it,
-            } // & keep nearest hit point in myHit.
-
-            if (myHit.hitNum == 0) { 
-                vec4.copy(colr, myHit.hitGeom.gapColor);
-            } else if (myHit.hitNum == 1) {
-                let currColor = this.getColor(myHit, this.rayCam.eyePt);
-                vec4.copy(colr, currColor);
-            } else { // if myHit.hitNum== -1)
-                vec4.copy(colr, this.skyColor);
-            }
-
-
-
-
-            // ! Set pixel color in our image buffer------------------------------------
-            // if (myHit.hitNum == 1){ //FIXME:
-            //     vec4.scale(colr, colr, 1/(g_AAcode*g_AAcode)); 
-            // }
+            vec4.scale(colr, colr, 1/(g_AAcode*g_AAcode)); 
             idx = (j * this.imgBuf.xSiz + i) * this.imgBuf.pixSiz; // Array index at pixel (i,j)
             this.imgBuf.fBuf[idx] = colr[0];
             this.imgBuf.fBuf[idx + 1] = colr[1];
@@ -135,10 +115,24 @@ CScene.prototype.makeRayTracedImage = function () {
 };
 
 var g_headLightOn = true;
-var g_worldLightOn = false;
+var g_worldLightOn = true;
 var g_recurDepth = 1;
 var g_falloff = 100;
-CScene.prototype.getColor = function(myHit, eyePos){
+
+function calDist(hits, i){
+    return Math.sqrt( Math.pow(hits.ray.orig[0]-hits.hitList[i].hitPt[0],2) 
+    + Math.pow(hits.ray.orig[1]-hits.hitList[i].hitPt[1], 2) 
+    + Math.pow(hits.ray.orig[2]-hits.hitList[i].hitPt[2],2) );
+}
+
+CScene.prototype.getColor = function(hits, eyePos){
+    let myHitIdx = 0;
+    for (let i=0; i < hits.hitList.length; i++) {
+        if (calDist(hits, i) < calDist(hits, myHitIdx)) {
+            myHitIdx = i;
+        }
+    }
+    let myHit = hits.hitList[myHitIdx];
     let color0 = vec4.create();
     let color1 = vec4.create();
     globalThis.HEADLIGHT = 0;
@@ -180,13 +174,28 @@ CScene.prototype.isShadow = function(myHit, lightIdx){
     vec4.subtract(rayDir,curLightPos, curRay);
     vec4.normalize(rayDir, rayDir);
 
+    let curHitList = new CHitList(curRay);
+    for (let h = 0; h < curHitList.hitList.length; h++){
+        for (k = 0; k < this.item.length; k++) {// for every CGeom in item[] array,
+            let curHit = new CHit(); 
+            curHitList.hitList.push(curHit);
+            this.item[k].traceMe(this.eyeRay, curHit); // trace eyeRay thru it,
+        } 
+    }
+    // curHitList.hitList = curHitList.hitList.sort(sortingScheme);
+
     if (myHit.t0 < (curLightPos[0] - curLight[0])/rayDir[0]){
         isInShadow = true;
-        console.log()
+        console.log("12")
     }
     
     return isInShadow;
 }
+
+function sortingScheme(h1,h2){
+    return h1.t0 < h2.t0 ? -1 : 1;
+}
+
 
 CScene.prototype.getReflect = function(){
     for(let iter = 0; iter< g_recurDepth; iter++) {
@@ -260,7 +269,7 @@ Light.prototype.getColor = function(myHit, eyePos){
     vec4.add(H, this.lightDirection, this.eyeDirection);
     vec4.normalize(H, H);
     //float nDotH = max(dot(H, normal), 0.0); \n' +
-    this.nDotH = Math.max(vec4.dot(H, this.normal),0);
+    this.nDotH = Math.max(vec4.dot(H, myHit.surfNorm), 0.0);
     //float e64 = pow(nDotH, float(u_MatlSet[0].shiny));\n' 
     this.e64 = Math.pow(this.nDotH, this.KShiny);
 
@@ -280,16 +289,14 @@ Light.prototype.getColor = function(myHit, eyePos){
     vec4.scale(this.diffuse,this.diffuse,this.nDotL);
     vec4.multiply(this.speculr, this.I_spec, this.Ks);
     vec4.scale(this.speculr, this.speculr, this.e64);
-
+    
     //  gl_FragColor = vec4(emissive + ambient + diffuse + speculr + ambient2 + diffuse2 + speculr2 , 1.0);\n' +
-
     vec4.add(this.pixelColor, this.pixelColor, this.emissive);
     vec4.add(this.pixelColor, this.pixelColor, this.ambient);
     vec4.add(this.pixelColor, this.pixelColor, this.diffuse);
     vec4.add(this.pixelColor, this.pixelColor, this.speculr);
-
-
-
+    
+    this.pixelColor[3] = 1.0;
 }
 
 
@@ -306,7 +313,7 @@ Light.prototype.updateLightPos = function(){
 Light.prototype.setDefaultLight = function(){
     //worldlight
     g_lamp0.I_pos.elements.set( [params.Lamp1PosX, params.Lamp1PosY, params.Lamp1PosZ]);
-    g_lamp0.I_ambi.elements.set([0.6, 0.6, 0.6]);
+    g_lamp0.I_ambi.elements.set([1.0, 1.0, 1.0]);
     g_lamp0.I_diff.elements.set([1.0, 1.0, 1.0]);
     g_lamp0.I_spec.elements.set([1.0, 1.0, 1.0]);
 
