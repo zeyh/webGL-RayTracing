@@ -3,6 +3,7 @@
  */
 "use strict";
 
+
 var params = {
     Lamp1PosX: 1.00,
     Lamp1PosY: -4.00,
@@ -14,7 +15,11 @@ var params = {
 var datgui = new dat.GUI( );
 datgui.close();
 datgui.domElement.id = 'datgui';
-// datgui.close();
+
+function setRecursionDepth(selection){
+    g_recurDepth = selection.value;
+}
+
 function setControlPanel() {
     datgui.add(params, 'Lamp1PosX', -10.0, 10.0).onChange(
         function (value) {
@@ -150,6 +155,7 @@ GUIbox.prototype.init = function () {
     this.camFar = 10000; // distance to frustum's outermost clipping plane
     // (for WebGL camera only--ignored by ray-tracer)
 };
+
 
 /**
  *  convert mouse event 'mev' from the given 'client' coordinates

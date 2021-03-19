@@ -16,28 +16,25 @@ References: besides the inline links, the code is modified from
     Done: Add a grid-plane-like flat disk and/or a sphere 
     Done: CGeom: rayLoadIdentity(), rayTranslate(), rayRotate(), rayScale(), worldRay2model transform matrix & squash a object
     Done: user-adjustable antialiasing [7] #testing
-    => 37
+    Done: 2 more user-adjustable 3D light positions [10]
+    Done:  In ray-traced result, show at least 2 different Phong materials on different surfaces simultaneously.
+    Done: recursive mirror-like reflections and 
+    Almost done: adjustable depth 
+    * Almost Done: show 3 transformed sphere
+    => 62
 
-    ? 2 more user-adjustable 3D light positions [10]
-    TODO 2 user-switchable point-light sources that cast overlapped shadows [7]
-
+    ? TODO overlapped shadows [7]
+    ? Todo show webGL 2 phong materials [5]
     ? CGeom: 3 or more transformed spheres [5]
-    TODO cylinder, cube, torus plus ray tracing [5]
+    ? cube transform non-uniform shape distortion [5]
+    ? 3d 3D checkerboard [5]
 
-    TODO Adjustable Recursion Depth [5]
-    TODO Recursive Mirror Reflections [5]
-    TODO 2 or more Phong materials. [5]
     TODO 4 distinct 3D Scenes [10]
-    TODO More Geometric Shapes [5 each]
+    TODO More Geometric Shapes cylinder torus plus ray tracing [5 each]
     TODO Soft Shadows [5]
     TODO Transparency with Refraction [10]
-
     TODO Non-Phong light/material [10 each]
     TODO Procedural Materials [5]
-    TODO Shape Distortions [5]
-
-    CCamera✅
-
 
     Note: 
         console.log(JSON.parse(JSON.stringify(g_particleArray[index].s1)));
@@ -98,6 +95,8 @@ function lightOn(idx){
 
     }
 }
+
+//PhongFrag
 var preView = new VBObox0(boxVert0, boxFrag0, axis_vboArr0, 6);
 var rayView = new VBObox1(boxVert1, boxFrag1, axis_vboArr1, 4);
 
@@ -128,19 +127,19 @@ function main() {
     gl.clearColor(0.2, 0.2, 0.2, 1);
     gl.enable(gl.DEPTH_TEST);
     gui.init();
-    g_myScene.initScene(1);
+    g_myScene.initScene(g_SceneNum);
     g_myScene.makeRayTracedImage();
     
     preView.init(gl); // VBO + shaders + uniforms + attribs for WebGL preview
     rayView.init(gl); //  "		"		" to display ray-traced on-screen result.
 
     onBrowserResize();
-    drawAll();
+    drawAll(g_SceneNum);
 
     g_myScene.makeRayTracedImage(); // run the ray-tracer
     rayView.switchToMe(); // be sure OUR VBO & shaders are in use, then
     rayView.reload(); // re-transfer VBO contents and texture-map contents
-    drawAll(); // re-draw BOTH viewports.
+    drawAll(g_SceneNum); // re-draw BOTH viewports.
 }
 
 function onSceneButton() {
@@ -152,18 +151,19 @@ function onSceneButton() {
         "Show Scene Number" + g_SceneNum;
 
     // ! Change g_myPic contents:
-    g_myPic.setTestPattern(g_SceneNum);
+    g_myScene.initScene(g_SceneNum);
+    g_myScene.makeRayTracedImage();
     // ! transfer g_myPic's new contents to the GPU;
     rayView.switchToMe(); // be sure OUR VBO & shaders are in use, then
     rayView.reload(); // re-transfer VBO contents and texture-map contents
-    drawAll();
+    drawAll(g_SceneNum);
 }
 
 /**
  * Re-draw all WebGL contents in our browser window.
  * NOTE: this program doesn't have an animation loop!
  */
-function drawAll() {
+function drawAll(g_SceneNum) {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     // * left
@@ -175,7 +175,7 @@ function drawAll() {
     );
     preView.switchToMe(); // Set WebGL to render from this VBObox.
     preView.adjust(); // Send new values for uniforms to the GPU, and
-    preView.draw(); // draw our VBO's contents using our shaders.
+    preView.draw(g_SceneNum); // draw our VBO's contents using our shaders.
 
     // * right
     gl.viewport(

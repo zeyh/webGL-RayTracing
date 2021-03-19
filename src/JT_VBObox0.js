@@ -602,7 +602,7 @@ VBObox0.prototype.adjust = function () {
 /**
  * render current VBObox contents.
  */
-VBObox0.prototype.draw = function () {
+VBObox0.prototype.draw = function (g_SceneNum) {
     if (this.isReady() == false) {
         console.log(
             "ERROR! before" +
@@ -614,34 +614,86 @@ VBObox0.prototype.draw = function () {
     var tmp = mat4.create();
     mat4.copy(tmp, this.mvpMat); // SAVE world-space coordinate transform
     gl.drawArrays(gl.LINES, 0, this.bgnSphere);
+    switch(g_SceneNum) {
+        case 0:
+            // * draw sphere
+            var tmp = mat4.create();
+            mat4.copy(tmp, this.mvpMat);
+            mat4.scale(this.mvpMat, this.mvpMat, vec3.fromValues(1.8, 1.8, 1.8));
+            mat4.translate(this.mvpMat, this.mvpMat, vec3.fromValues(-0.5, 2, 2.0));
+            gl.uniformMatrix4fv(this.u_mvpMatLoc, false, this.mvpMat);
+            mat4.copy(this.mvpMat, tmp);
+            gl.drawArrays(gl.LINE_STRIP, this.bgnSphere, this.bgnCyl - this.bgnSphere);
 
-    // ! draw model objects
-    // * draw sphere
-    var tmp = mat4.create();
-    mat4.copy(tmp, this.mvpMat);
-    // mat4.translate(this.mvpMat, this.mvpMat, vec3.fromValues(1.0, 1.0, 1.3));
-    // mat4.rotate(this.mvpMat,this.mvpMat,0.25 * Math.PI,vec3.fromValues(1, 0, 0));
-    // mat4.rotate(this.mvpMat,this.mvpMat,0.25 * Math.PI,vec3.fromValues(0, 0, 1));
-    gl.uniformMatrix4fv(this.u_mvpMatLoc, false, this.mvpMat);
-    mat4.copy(this.mvpMat, tmp);
-    gl.drawArrays(gl.LINE_STRIP, this.bgnSphere, this.bgnCyl - this.bgnSphere);
 
-    // * draw cylinder 1 - cube
-    mat4.copy(this.mvpMat, tmp); 
-    mat4.translate(this.mvpMat, this.mvpMat, vec3.fromValues(1.2, 1.4, 1.0));
-    gl.uniformMatrix4fv(this.u_mvpMatLoc, false, this.mvpMat); 
-    mat4.copy(this.mvpMat, tmp); 
-    gl.drawArrays(gl.LINE_STRIP,this.bgnCyl, this.bgnCyl2 - this.bgnCyl); 
+            // * draw sphere
+            var tmp = mat4.create();
+            mat4.copy(tmp, this.mvpMat);
+            mat4.scale(this.mvpMat, this.mvpMat, vec3.fromValues(1, 1, 1));
+            mat4.translate(this.mvpMat, this.mvpMat, vec3.fromValues(2, 1, 1.0));
+            gl.uniformMatrix4fv(this.u_mvpMatLoc, false, this.mvpMat);
+            mat4.copy(this.mvpMat, tmp);
+            gl.drawArrays(gl.LINE_STRIP, this.bgnSphere, this.bgnCyl - this.bgnSphere);
 
-    // * draw cylinder 2 - cone
-    mat4.copy(this.mvpMat, tmp); 
-    mat4.translate(this.mvpMat, this.mvpMat, vec3.fromValues(-1.5, 1.2, 1.0));
-    mat4.scale(this.mvpMat, this.mvpMat, vec3.fromValues(1.0, 0.5, 1.0));
-    gl.uniformMatrix4fv(this.u_mvpMatLoc, false, this.mvpMat); 
-    mat4.copy(this.mvpMat, tmp); 
-    gl.drawArrays(gl.LINE_STRIP,this.bgnCyl2, this.vboVerts - this.bgnCyl2); 
+            // * draw sphere
+            var tmp = mat4.create();
+            mat4.copy(tmp, this.mvpMat);
+            mat4.rotate(this.mvpMat, this.mvpMat, -0.8*Math.PI, vec3.fromValues(0,0,1));
+            mat4.scale(this.mvpMat, this.mvpMat, vec3.fromValues(0.3, 1, 0.3));
+            mat4.translate(this.mvpMat, this.mvpMat, vec3.fromValues(4, 3, 3));
+            gl.uniformMatrix4fv(this.u_mvpMatLoc, false, this.mvpMat);
+            mat4.copy(this.mvpMat, tmp);
+            gl.drawArrays(gl.LINE_STRIP, this.bgnSphere, this.bgnCyl - this.bgnSphere);
 
-    mat4.copy(this.mvpMat, tmp); // RESTORE current value (needs push-down stack!)
+            // * draw sphere
+            var tmp = mat4.create();
+            mat4.copy(tmp, this.mvpMat);
+            mat4.scale(this.mvpMat, this.mvpMat, vec3.fromValues(0.5, 0.5, 2));
+            mat4.translate(this.mvpMat, this.mvpMat, vec3.fromValues(-5, 1.2, 1.0));
+            mat4.rotate(this.mvpMat, this.mvpMat, -0.8*Math.PI, vec3.fromValues(0,0,1));
+            gl.uniformMatrix4fv(this.u_mvpMatLoc, false, this.mvpMat);
+            mat4.copy(this.mvpMat, tmp);
+            gl.drawArrays(gl.LINE_STRIP, this.bgnSphere, this.bgnCyl - this.bgnSphere);
+
+            break;
+        case 1:
+            // ! draw model objects
+            // * draw sphere
+            var tmp = mat4.create();
+            mat4.copy(tmp, this.mvpMat);
+            // mat4.translate(this.mvpMat, this.mvpMat, vec3.fromValues(1.0, 1.0, 1.3));
+            // mat4.rotate(this.mvpMat,this.mvpMat,0.25 * Math.PI,vec3.fromValues(1, 0, 0));
+            // mat4.rotate(this.mvpMat,this.mvpMat,0.25 * Math.PI,vec3.fromValues(0, 0, 1));
+            gl.uniformMatrix4fv(this.u_mvpMatLoc, false, this.mvpMat);
+            mat4.copy(this.mvpMat, tmp);
+            gl.drawArrays(gl.LINE_STRIP, this.bgnSphere, this.bgnCyl - this.bgnSphere);
+
+            // * draw cylinder 1 - cube
+            mat4.copy(this.mvpMat, tmp); 
+            mat4.translate(this.mvpMat, this.mvpMat, vec3.fromValues(1.2, 1.4, 1.0));
+            gl.uniformMatrix4fv(this.u_mvpMatLoc, false, this.mvpMat); 
+            mat4.copy(this.mvpMat, tmp); 
+            gl.drawArrays(gl.LINE_STRIP,this.bgnCyl, this.bgnCyl2 - this.bgnCyl); 
+
+            // * draw cylinder 2 - cone
+            mat4.copy(this.mvpMat, tmp); 
+            mat4.translate(this.mvpMat, this.mvpMat, vec3.fromValues(-1.5, 1.2, 1.0));
+            mat4.scale(this.mvpMat, this.mvpMat, vec3.fromValues(1.0, 0.5, 1.0));
+            gl.uniformMatrix4fv(this.u_mvpMatLoc, false, this.mvpMat); 
+            mat4.copy(this.mvpMat, tmp); 
+            gl.drawArrays(gl.LINE_STRIP,this.bgnCyl2, this.vboVerts - this.bgnCyl2); 
+
+            mat4.copy(this.mvpMat, tmp); // RESTORE current value (needs push-down stack!)
+            break;
+        default:
+            console.log(
+                "JT_tracer0-Scene file: CScene.initScene(",
+                g_SceneNum,
+                ") NOT YET IMPLEMENTED."
+            );
+            this.draw(0); // init the default scene.
+            break;
+    }
 };
 
 /**

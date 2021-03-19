@@ -1,7 +1,7 @@
 const RT_GNDPLANE = 0;
 const RT_SPHERE = 1;
 const RT_BOX = 2;
-
+const RT_CYLINDER = 3;
 function CGeom(shapeSelect) {
     if (shapeSelect == undefined) shapeSelect = RT_GNDPLANE; // default
     this.shapeType = shapeSelect;
@@ -27,6 +27,12 @@ function CGeom(shapeSelect) {
                 this.traceCube(inR, hit);
             };
             break;
+        case RT_CYLINDER:
+            this.cylinderRad = 1;
+            this.traceMe = function (inR, hit) {
+                this.traceCylinder(inR, hit);
+            };
+            break;
         default:
             console.log(
                 "CGeom() constructor: ERROR! INVALID shapeSelect:",
@@ -38,7 +44,9 @@ function CGeom(shapeSelect) {
     this.worldRay2model = mat4.create(); // the matrix used to transform rays from
     this.normal2world = mat4.create();
 }
-
+CGeom.prototype.setMaterial = function(code){
+    this.matl.setMatl(code);
+}
 CGeom.prototype.traceGrid = function (inRay, myHit) {
     var rayT = new CRay(); // create a local transformed-ray variable.
 
@@ -133,7 +141,7 @@ CGeom.prototype.traceSphere = function (inRay, myHit) {
         this.normal2world
     );
     myHit.hitNum = 1; // in CScene.makeRayTracedImage, use 'this.gapColor'
-    myHit.hitGeom.matl.setMatl(22);
+    // myHit.hitGeom.matl.setMatl(22);
     myHit.reflect(inRay);
     if (g_myScene.pixFlag == 1) {
         console.log("r2s:",r2s,"L2", L2,"tcaS",tcaS,"tca2", tca2, "LM2", LM2,"L2hc",L2hc, "t0hit", t0hit); 
@@ -161,7 +169,7 @@ CGeom.prototype.traceCube = function (inRay, myHit) {
         vec4.scaleAndAdd(myHit.hitPt, inRay.orig, inRay.dir, myHit.t0);
         myHit.surfNorm = vec4.fromValues(0,0,0,0);
         myHit.surfNorm[idx] = 1;
-        myHit.hitGeom.matl.setMatl(10);
+        // myHit.hitGeom.matl.setMatl(10);
         myHit.reflect(inRay); 
         myHit.hitNum = 1;
     }
@@ -180,7 +188,7 @@ CGeom.prototype.traceCube = function (inRay, myHit) {
         vec4.scaleAndAdd(myHit.hitPt, inRay.orig, inRay.dir, myHit.t0);
         myHit.surfNorm = vec4.fromValues(0,0,0,0);
         myHit.surfNorm[idx] = -1;
-        myHit.hitGeom.matl.setMatl(10);
+        // myHit.hitGeom.matl.setMatl(10);
         myHit.reflect(inRay); 
         myHit.hitNum = 1;
 
@@ -190,7 +198,36 @@ CGeom.prototype.traceCube = function (inRay, myHit) {
     
 };
 
+CGeom.prototype.traceCylinder = function (inRay, myHit) {
+    var rayT = new CRay(); // to create 'rayT', our local model-space ray.
+    vec4.copy(rayT.orig, inRay.orig); // memory-to-memory copy.
+    vec4.copy(rayT.dir, inRay.dir);
+    vec4.transformMat4(rayT.orig, inRay.orig, this.worldRay2model);
+    vec4.transformMat4(rayT.dir, inRay.dir, this.worldRay2model);
 
+    // TODO: 
+    // let t0 = (this.cylinderRad - rayT.orig[2]) / rayT.dir[2];
+    // let tmpHit = vec4.create();
+
+    // if ((tmpHit[0] * tmpHit[0] + tmpHit[1] * tmpHit[1] > 1) || t0 < 0 || t0 > myHit.t0){ 
+    //     return;
+    // }
+    // vec4.scaleAndAdd(tmpHit, rayT.orig, rayT.dir, t0);
+
+    // myHit.t0 = t0;
+    // myHit.hitGeom = this;
+    // vec4.scaleAndAdd(myHit.modelHitPt, rayT.orig, rayT.dir, myHit.t0);
+    // vec4.scaleAndAdd(myHit.hitPt, inRay.orig, inRay.dir, myHit.t0);
+    // vec4.transformMat4(
+    //     myHit.surfNorm,
+    //     vec4.fromValues(myHit.modelHitPt[0], myHit.modelHitPt[1], myHit.modelHitPt[2], 0),
+    //     this.normal2world
+    // );    
+    // myHit.hitGeom.matl.setMatl(13);
+    // myHit.reflect(inRay); 
+    // myHit.hitNum = 1;
+
+}
 
 
 // ! matrix transform ==========================================

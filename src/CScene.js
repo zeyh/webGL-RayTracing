@@ -30,6 +30,40 @@ CScene.prototype.initScene = function (num) {
         case 0:
             this.item.push(new CGeom(RT_GNDPLANE)); // Append gnd-plane to item[] array
             iNow = this.item.length - 1; // get its array index.
+
+            // * sphere
+            this.item.push(new CGeom(RT_SPHERE));
+            iNow = this.item.length - 1;
+            this.item[iNow].setIdent();
+            this.item[iNow].rayScale(1.8, 1.8, 1.8);
+            this.item[iNow].rayTranslate(-0.5, 2, 2.0);
+            this.item[iNow].setMaterial(9);
+
+            // * sphere
+            this.item.push(new CGeom(RT_SPHERE));
+            iNow = this.item.length - 1;
+            this.item[iNow].setIdent();
+            this.item[iNow].rayScale(1, 1, 1);
+            this.item[iNow].rayTranslate(2, 1, 1.0);
+            this.item[iNow].setMaterial(8);
+
+            // * sphere
+            this.item.push(new CGeom(RT_SPHERE));
+            iNow = this.item.length - 1;
+            this.item[iNow].setIdent();
+            this.item[iNow].rayRotate(-0.8*Math.PI, 0,0,1);
+            this.item[iNow].rayScale(0.3, 1, 0.3);
+            this.item[iNow].rayTranslate(4, 3, 3);
+            this.item[iNow].setMaterial(12);
+
+            // * sphere
+            this.item.push(new CGeom(RT_SPHERE));
+            iNow = this.item.length - 1;
+            this.item[iNow].setIdent();
+            this.item[iNow].rayScale(0.5, 0.5, 2);
+            this.item[iNow].rayTranslate(-5, 1.2, 1.0);
+            this.item[iNow].rayRotate(-0.8*Math.PI, 0,0,1);
+            this.item[iNow].setMaterial(14);
             break;
         case 1:
             this.item.push(new CGeom(RT_GNDPLANE)); // Append gnd-plane to item[] array
@@ -41,8 +75,8 @@ CScene.prototype.initScene = function (num) {
             this.item[iNow].setIdent();
             this.item[iNow].rayScale(0.8, 0.8, 0.8);
             this.item[iNow].rayTranslate(0, -3.2, 1.0);
+            this.item[iNow].setMaterial(12);
    
-
             // * cube
             this.item.push(new CGeom(RT_BOX));
             iNow = this.item.length - 1;
@@ -50,6 +84,16 @@ CScene.prototype.initScene = function (num) {
             this.item[iNow].rayScale(1, 1, 1.3);
             this.item[iNow].rayTranslate(1.2, 1.4, 1.0);
             this.item[iNow].rayRotate(0.8*Math.PI, 0,0,1);
+            this.item[iNow].setMaterial(10);
+
+            // * cube
+            this.item.push(new CGeom(RT_CYLINDER));
+            iNow = this.item.length - 1;
+            this.item[iNow].setIdent();
+            this.item[iNow].rayScale(0.8, 1, 1);
+            this.item[iNow].rayTranslate(-2, 1.4, 1.0);
+            this.item[iNow].rayRotate(-0.8*Math.PI, 0,0,1);
+            this.item[iNow].setMaterial(14);
 
             break;
         case 2:
@@ -210,16 +254,18 @@ CScene.prototype.isShadow = function (myHit, lightIdx, hits) {
 
 CScene.prototype.getReflect = function (myHit, eyePos, curLight) {
     let color =  vec4.create();
-    for(let i=0; i<g_recurDepth; i++){
-        let rRay = new CRay();
-        vec4.copy(rRay.orig, myHit.hitPt);
-        vec4.copy(rRay.dir, myHit.refl);
-        let rHits = this.traceGeom(rRay, myHit);
-        let curRHit = rHits.closest();
-        if(curRHit.hitNum == -1){
-            continue;
+    if(g_recurDepth > 0){
+        for(let i=0; i<g_recurDepth; i++){
+            let rRay = new CRay();
+            vec4.copy(rRay.orig, myHit.hitPt);
+            vec4.copy(rRay.dir, myHit.refl);
+            let rHits = this.traceGeom(rRay, myHit);
+            let curRHit = rHits.closest();
+            if(curRHit.hitNum == -1){
+                continue;
+            }
+            vec4.scaleAndAdd(color, color, curLight.getColor(curRHit, eyePos), curLight.KShiny/g_falloff);
         }
-        vec4.scaleAndAdd(color, color, curLight.getColor(curRHit, eyePos), curLight.KShiny/g_falloff);
     }
     return color;
 };
