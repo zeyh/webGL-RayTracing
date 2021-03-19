@@ -97,5 +97,5 @@ CCamera.prototype.setEyeRay = function (myeRay, xpos, ypos) {
  * print CCamera object's current contents in console window:
  */
 CCamera.prototype.printMe = function () {
-    console.log("you called CCamera.printMe()");
+    console.log("cccamera", this); 
 };

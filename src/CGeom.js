@@ -5,7 +5,8 @@ const RT_BOX = 2;
 function CGeom(shapeSelect) {
     if (shapeSelect == undefined) shapeSelect = RT_GNDPLANE; // default
     this.shapeType = shapeSelect;
-
+    this.matl = new Material();
+    this.matl.setMatl(g_matl0);
     switch (this.shapeType) {
         case RT_GNDPLANE:
             this.traceMe = function (inR, hit) {
@@ -21,6 +22,7 @@ function CGeom(shapeSelect) {
             };
             break;
         case RT_BOX:
+            this.boxSize = 1;
             this.traceMe = function (inR, hit) {
                 this.traceCube(inR, hit);
             };
@@ -67,7 +69,8 @@ CGeom.prototype.traceGrid = function (inRay, myHit) {
     if (loc % 1 < this.lineWidth) {
         // fractional part of loc < linewidth?
         myHit.hitNum = 1; // YES. rayT hit a line of constant-x
-        g_matl0.setMatl(3);
+        myHit.hitGeom.matl.setMatl(3);
+        myHit.reflect(inRay); 
         return;
     }
     loc = myHit.modelHitPt[1] / this.ygap; // how many 'ygaps' from origin?
@@ -75,74 +78,67 @@ CGeom.prototype.traceGrid = function (inRay, myHit) {
     if (loc % 1 < this.lineWidth) {
         // fractional part of loc < linewidth?
         myHit.hitNum = 1; // YES. rayT hit a line of constant-y
-        g_matl0.setMatl(3);
+        myHit.hitGeom.matl.setMatl(3);
+        myHit.reflect(inRay); 
         return;
     }
-    g_matl0.setMatl(5);
+    myHit.hitGeom.matl.setMatl(5);
+    myHit.reflect(inRay); 
     myHit.hitNum = 0; // No.
     return;
 };
     
 
-CGeom.prototype.traceSphere = function(inRay, myHit) { 
-    var rayT = new CRay();    // to create 'rayT', our local model-space ray.
-    vec4.copy(rayT.orig, inRay.orig);   // memory-to-memory copy. 
+CGeom.prototype.traceSphere = function (inRay, myHit) {
+    var rayT = new CRay(); // to create 'rayT', our local model-space ray.
+    vec4.copy(rayT.orig, inRay.orig); // memory-to-memory copy.
     vec4.copy(rayT.dir, inRay.dir);
     vec4.transformMat4(rayT.orig, inRay.orig, this.worldRay2model);
-    vec4.transformMat4(rayT.dir,  inRay.dir,  this.worldRay2model);
-    
+    vec4.transformMat4(rayT.dir, inRay.dir, this.worldRay2model);
+
     var r2s = vec4.create();
-    vec4.subtract(r2s, vec4.fromValues(0,0,0,1), rayT.orig);
-    // Find L2, the squared length of r2s, by dot-product with itself:
-    var L2 = vec3.dot(r2s,r2s);   // NOTE: vec3.dot() IGNORES the 'w' values when 
-    if(L2 <= 1.0) { // report error and quit.  LATER we can use this case to handle rays through transparent spheres.
-        console.log("CGeom.traceSphere() ERROR! rayT origin at or inside sphere!\n\n");
-        return;       // HINT: see comments at end of this function.
+    vec4.subtract(r2s, vec4.fromValues(0, 0, 0, 1), rayT.orig);
+    var L2 = vec3.dot(r2s, r2s); // NOTE: vec3.dot() IGNORES the 'w' values when
+    if (L2 <= 1.0) {
+        console.log(
+            "CGeom.traceSphere() ERROR! rayT origin at or inside sphere!\n\n"
+        );
+        return; // HINT: see comments at end of this function.
     }
-   
     var tcaS = vec3.dot(rayT.dir, r2s); // tcaS == SCALED tca;
-    if(tcaS < 0.0) {      // Is the chord mid-point BEHIND the camera(where t<0)?
-        return;            // YES!  rayT didn't start inside the sphere, so if
-    }                   
-                          
-    
+    if (tcaS < 0.0) {
+        return; 
+    }
+
     var DL2 = vec3.dot(rayT.dir, rayT.dir);
-    var tca2 = tcaS*tcaS / DL2;
-    var LM2 = L2 - tca2;  
-    if(LM2 > 1.0) {   // if LM2 > radius^2, then chord mid-point is OUTSIDE the
-        return;         // DON'T change myHit, don't do any further calcs. Bye!
+    var tca2 = (tcaS * tcaS) / DL2;
+    var LM2 = L2 - tca2;
+    if (LM2 > 1.0) {
+        return; 
     }
 
-    var L2hc = (1.0 - LM2); // SQUARED half-chord length.
-    var t0hit = tcaS/DL2 -Math.sqrt(L2hc/DL2);  // closer of the 2 hit-points.
-    if(t0hit > myHit.t0) {    // is this new hit-point CLOSER than 'myHit'?
-        return;       // NO.  DON'T change myHit, don't do any further calcs. Bye!
+    var L2hc = 1.0 - LM2; // SQUARED half-chord length.
+    var t0hit = tcaS / DL2 - Math.sqrt(L2hc / DL2); // closer of the 2 hit-points.
+    if (t0hit > myHit.t0) {
+        return; 
     }
-    
-    myHit.t0 = t0hit;          // record ray-length, and
-    myHit.hitGeom = this;      // record this CGeom object as the one we hit, and
-    // Compute the x,y,z,w point where rayT hit the sphere in MODEL coords:
-    // vec4.scaleAndAdd(out,a,b,scalar) sets out = a + b*scalar
-    vec4.scaleAndAdd(myHit.modelHitPt, rayT.orig, rayT.dir, myHit.t0); 
-    // Compute the x,y,z,w point where inRay hit the grid-plane in WORLD coords:
+
+    myHit.t0 = t0hit; // record ray-length, and
+    myHit.hitGeom = this; // record this CGeom object as the one we hit, and
+    vec4.scaleAndAdd(myHit.modelHitPt, rayT.orig, rayT.dir, myHit.t0);
     vec4.scaleAndAdd(myHit.hitPt, inRay.orig, inRay.dir, myHit.t0);
-    // set 'viewN' member to the reversed, normalized inRay.dir vector:
-    vec4.negate(myHit.viewN, inRay.dir); 
-    // inRay.dir MUST be a vector, not a point, to ensure w sign has no effect)
-    vec4.normalize(myHit.viewN, myHit.viewN); // ensure a unit-length vector.
-    // Now find surface normal: 
-    vec4.transformMat4(myHit.surfNorm, vec4.fromValues(0,0,1,0), this.normal2world);
-    vec4.normalize(myHit.surfNorm, myHit.surfNorm);
-    myHit.hitNum = 1;   // in CScene.makeRayTracedImage, use 'this.gapColor'
-    g_matl0.setMatl(2);
-
-    // DIAGNOSTIC:---------------------------------------------------------------
-    if(g_myScene.pixFlag ==1) {   // did we reach the one 'flagged' pixel
-                                    // chosen in CScene.makeRayTracedImage()?
-    console.log("r2s:", r2s, "L2", L2, "tcaS", tcaS, "tca2", tca2, 
-                "LM2", LM2, "L2hc", L2hc, "t0hit", t0hit, );  // YES!
+    vec4.transformMat4(
+        myHit.surfNorm,
+        vec4.fromValues(myHit.modelHitPt[0], myHit.modelHitPt[1], myHit.modelHitPt[2], 0),
+        this.normal2world
+    );
+    myHit.hitNum = 1; // in CScene.makeRayTracedImage, use 'this.gapColor'
+    myHit.hitGeom.matl.setMatl(13);
+    myHit.reflect(inRay);
+    if (g_myScene.pixFlag == 1) {
+        console.log("r2s:",r2s,"L2", L2,"tcaS",tcaS,"tca2", tca2, "LM2", LM2,"L2hc",L2hc, "t0hit", t0hit); 
     }
-}
+};
 
 CGeom.prototype.traceCube = function (inRay, myHit) {
     var rayT = new CRay(); // to create 'rayT', our local model-space ray.
@@ -151,42 +147,47 @@ CGeom.prototype.traceCube = function (inRay, myHit) {
     vec4.transformMat4(rayT.orig, inRay.orig, this.worldRay2model);
     vec4.transformMat4(rayT.dir, inRay.dir, this.worldRay2model);
 
-    for (let x = 0; x < 2; x++) {
-        for (let y = 0; y < 3; y++) {
-            let t0 = (2 * x - 1.0 - rayT.orig[j]) / rayT.dir[j];
-            if(t0 >= 0 && t0 <= myHit.t0){
-                return;
-            }
-
-            let modelHit = vec4.create();
-            vec4.scaleAndAdd(modelHit, rayT.orig, rayT.dir, t0);
-            if(y == 0 && (modelHit[0] <= 1.0 && modelHit[0] >= -1.0)) {
-                return;
-            }
-            if (y == 1 && (modelHit[1] <= 1.0 && modelHit[1] >= -1.0)){
-                return;
-            }
-            if (y == 2 && (modelHit[2] <= 1.0 && modelHit[2] >= -1.0)){
-                return;
-            }
-
-            myHit.t0 = t0;
-            myHit.hitGeom = this;
-            vec4.scaleAndAdd(myHit.modelHitPt, rayT.orig, rayT.dir, myHit.t0);
-            vec4.scaleAndAdd(myHit.hitPt, inRay.orig, inRay.dir, myHit.t0);
-            if (y == 0) {
-                myHit.surfNorm = vec4.fromValues(2 * x - 1, 0, 0, 0);
-            } else if (y == 0) {
-                myHit.surfNorm = vec4.fromValues(0, 2 * x - 1, 0, 0);
-            } else if (y == 0) {
-                myHit.surfNorm = vec4.fromValues(0, 0, 2 * x - 1, 0);
-            }
-            vec4.negate(myHit.viewN, inRay.dir); // reversed, normalized inRay.dir:
-            vec4.normalize(myHit.viewN, myHit.viewN); // make view vector unit-length.
-            vec4.normalize(myHit.surfNorm, myHit.surfNorm); // mask surface normal unit-length
+    for (let idx = 0; idx < 3; idx ++) {
+        let t0 = (this.boxSize - rayT.orig[idx]) / rayT.dir[idx];
+        let tmpHit = vec4.create();
+        vec4.scaleAndAdd(tmpHit, rayT.orig, rayT.dir, t0);
+        if ((idx != 0 && (tmpHit[0] < -1.0 || tmpHit[0] > 1.0)) || (idx != 1 && (tmpHit[1] < -1.0 || tmpHit[1] > 1.0)) || (idx != 2 && (tmpHit[2] < -1.0 || tmpHit[2] > 1.0)) 
+        || t0 < 0 || t0 > myHit.t0){ 
+             continue;
         }
+        myHit.t0 = t0;
+        myHit.hitGeom = this;
+        vec4.scaleAndAdd(myHit.modelHitPt, rayT.orig, rayT.dir, myHit.t0);
+        vec4.scaleAndAdd(myHit.hitPt, inRay.orig, inRay.dir, myHit.t0);
+        myHit.surfNorm = vec4.fromValues(0,0,0,0);
+        myHit.surfNorm[idx] = 1;
+        myHit.hitGeom.matl.setMatl(10);
+        myHit.reflect(inRay); 
+        myHit.hitNum = 1;
     }
-    myHit.hitNum = 1;
+    
+    for (let idx = 0; idx < 3; idx++) {
+        let t0 = (-this.boxSize - rayT.orig[idx]) / rayT.dir[idx];
+        let tmpHit = vec4.create();
+        vec4.scaleAndAdd(tmpHit, rayT.orig, rayT.dir, t0);
+        if ((idx != 0 && (tmpHit[0] < -1.0 || tmpHit[0] > 1.0)) || (idx != 1 && (tmpHit[1] < -1.0 || tmpHit[1] > 1.0)) || (idx != 2 && (tmpHit[2] < -1.0 || tmpHit[2] > 1.0)) 
+        || t0 < 0 || t0 > myHit.t0){ 
+             continue;
+        }
+        myHit.t0 = t0;
+        myHit.hitGeom = this;
+        vec4.scaleAndAdd(myHit.modelHitPt, rayT.orig, rayT.dir, myHit.t0);
+        vec4.scaleAndAdd(myHit.hitPt, inRay.orig, inRay.dir, myHit.t0);
+        myHit.surfNorm = vec4.fromValues(0,0,0,0);
+        myHit.surfNorm[idx] = -1;
+        myHit.hitGeom.matl.setMatl(10);
+        myHit.reflect(inRay); 
+        myHit.hitNum = 1;
+
+    }
+
+
+    
 };
 
 

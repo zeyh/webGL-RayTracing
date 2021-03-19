@@ -7,11 +7,12 @@ var params = {
     Lamp1PosX: 1.00,
     Lamp1PosY: 4.00,
     Lamp1PosZ: 4.00,
-    Lamp2PosX: 0.00,
-    Lamp2PosY: -4.00,
-    Lamp2PosZ: 0.00,
+    Lamp2PosX: 0,
+    Lamp2PosY: -8,
+    Lamp2PosZ: 2,
 }
 var datgui = new dat.GUI( );
+datgui.close();
 datgui.domElement.id = 'datgui';
 // datgui.close();
 function setControlPanel() {

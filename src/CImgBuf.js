@@ -140,10 +140,6 @@ function CImgBuf(wide, tall) {
     //=============================================================================
     // Use console.log() to print the integer and floating-point values (R,B,B,...)
     // stored in our CImgBuf object for the pixel at (xpix,ypix)
-            //
-            //
-            //		YOU WRITE THIS
-            //
-            //
+        console.log("cImgBuf pixel at: " + String(xpix) + ", " + String(ypix) );
     }
     

@@ -83,6 +83,7 @@ var boxFrag1 =
 var gl;
 var g_canvasID;
 var gui = new GUIbox();
+
 setControlPanel();
 
 function lightOn(idx){
