@@ -39,17 +39,17 @@ CScene.prototype.initScene = function (num) {
             this.item.push(new CGeom(RT_SPHERE));
             iNow = this.item.length - 1;
             this.item[iNow].setIdent();
-            this.item[iNow].rayScale(0.65, 0.65, 0.65);
-            this.item[iNow].rayTranslate(0, -4.0, 1.0);
+            this.item[iNow].rayScale(0.8, 0.8, 0.8);
+            this.item[iNow].rayTranslate(0, -3.2, 1.0);
    
 
             // * cube
             this.item.push(new CGeom(RT_BOX));
             iNow = this.item.length - 1;
             this.item[iNow].setIdent();
-            this.item[iNow].rayScale(1, 1, 1);
+            this.item[iNow].rayScale(1, 1, 1.3);
             this.item[iNow].rayTranslate(1.2, 1.4, 1.0);
-            this.item[iNow].rayRotate(0.75*Math.PI, 0,0,1);
+            this.item[iNow].rayRotate(0.8*Math.PI, 0,0,1);
 
             break;
         case 2:
@@ -109,11 +109,11 @@ CScene.prototype.makeRayTracedImage = function () {
                     this.rayCam.setEyeRay(this.eyeRay, posX, posY); // create ray for pixel (i,j)
                     let hits = this.traceGeom(this.eyeRay)
                     if (hits.hitList.length > 0) {
-                        vec4.add(
-                            colr,
-                            colr,
-                            this.getColor(hits, this.rayCam.eyePt)
-                        );
+                        let tmp = this.getColor(hits, this.rayCam.eyePt);
+                        if(tmp){
+                            vec4.add(colr,colr,tmp);
+                        }
+
                     }
                 }
             }
@@ -150,6 +150,9 @@ CScene.prototype.getColor = function (hits, eyePos) {
     light1.updateLightPos();
 
     let myHit = hits.closest();
+    if(myHit.hitNum == -1){
+        return;
+    }
     // !this.isShadow(myHit, WORLDLIGHT, hits)
     if (g_headLightOn) {
         color0 = light0.getColor(myHit, eyePos);
@@ -213,6 +216,9 @@ CScene.prototype.getReflect = function (myHit, eyePos, curLight) {
         vec4.copy(rRay.dir, myHit.refl);
         let rHits = this.traceGeom(rRay, myHit);
         let curRHit = rHits.closest();
+        if(curRHit.hitNum == -1){
+            continue;
+        }
         vec4.scaleAndAdd(color, color, curLight.getColor(curRHit, eyePos), curLight.KShiny/g_falloff);
     }
     return color;
@@ -221,7 +227,7 @@ CScene.prototype.getReflect = function (myHit, eyePos, curLight) {
 var g_lamp0 = new LightsT(); //world-light
 var g_lamp1 = new LightsT(); //another light source
 var g_matl0 = new Material();
-g_matl0.setMatl(1);
+g_matl0.setMatl(3);
 
 function Light(idx) {
     this.idx = idx;
@@ -283,11 +289,10 @@ function Light(idx) {
 
 Light.prototype.getColor = function (myHit, eyePos) {
     this.setDefaultMat(myHit.hitGeom.matl);
-
-    let mat = myHit.hitGeom.matl;
-    if(!mat){
-        mat = g_matl0;
+    if(myHit.hitNum == -1){
+        return
     }
+    let mat = myHit.hitGeom.matl;
     //emissive
     let color = vec4.clone(mat.K_emit);
     
@@ -360,8 +365,8 @@ Light.prototype.setDefaultLight = function () {
         params.Lamp2PosY,
         params.Lamp2PosZ,
     ]);
-    g_lamp1.I_ambi.elements.set([1.0, 1.0, 1.0]);
-    g_lamp1.I_diff.elements.set([1.0, 1.0, 1.0]);
+    g_lamp1.I_ambi.elements.set([0.6, 0.6, 0.6]);
+    g_lamp1.I_diff.elements.set([0.6, 0.6, 0.6]);
     g_lamp1.I_spec.elements.set([1.0, 1.0, 1.0]);
 };
 

@@ -42,7 +42,7 @@ CHit.prototype.reflect = function (myRay) {
 
 function CHitList(cRay) {
     this.ray = cRay;
-    this.hitList = [];
+    this.hitList = [new CHit()];
 }
 CHitList.prototype.add = function () {
     this.hitList.push(new CHit());

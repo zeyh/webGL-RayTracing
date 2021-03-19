@@ -82,7 +82,7 @@ CGeom.prototype.traceGrid = function (inRay, myHit) {
         myHit.reflect(inRay); 
         return;
     }
-    myHit.hitGeom.matl.setMatl(5);
+    myHit.hitGeom.matl.setMatl(9);
     myHit.reflect(inRay); 
     myHit.hitNum = 0; // No.
     return;
@@ -133,7 +133,7 @@ CGeom.prototype.traceSphere = function (inRay, myHit) {
         this.normal2world
     );
     myHit.hitNum = 1; // in CScene.makeRayTracedImage, use 'this.gapColor'
-    myHit.hitGeom.matl.setMatl(13);
+    myHit.hitGeom.matl.setMatl(22);
     myHit.reflect(inRay);
     if (g_myScene.pixFlag == 1) {
         console.log("r2s:",r2s,"L2", L2,"tcaS",tcaS,"tca2", tca2, "LM2", LM2,"L2hc",L2hc, "t0hit", t0hit); 
