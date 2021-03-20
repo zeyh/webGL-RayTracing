@@ -315,8 +315,8 @@ var g_myScene = new CScene(); // Create our ray-tracing object;
 
 // this contains our complete 3D scene & its camera
 // used to write a complete ray-traced image to the CImgBuf object 'g_myPic' given as argument.
-var g_SceneNum = 1; // scene-selector number; 0,1,2,... G_SCENE_MAX-1
-var G_SCENE_MAX = 2; // Number of scenes defined.
+var g_SceneNum = 3; // scene-selector number; 0,1,2,... G_SCENE_MAX-1
+var G_SCENE_MAX = 3; // Number of scenes defined.
 var g_AAcode = 1; // Antialiasing setting: 1 == NO antialiasing at all. 2,3,4... == supersamples: 2x2, 3x3, 4x4, ...
 var G_AA_MAX = 4; // highest super-sampling number allowed.
 var g_isJitter = 0; // ==1 for jitter, ==0 for no jitter.
@@ -518,7 +518,6 @@ function drawPreview(g_modelMatrix, g_viewProjMatrix){
             g_vboArray[2].draw(g_modelMatrix, g_viewProjMatrix);
             g_modelMatrix = popMatrix();
 
-
             // * sphere
             pushMatrix(g_modelMatrix);
             g_modelMatrix.scale(0.3, 3.3, 0.3);
@@ -528,7 +527,6 @@ function drawPreview(g_modelMatrix, g_viewProjMatrix){
             g_vboArray[2].switchToMe();
             g_vboArray[2].draw(g_modelMatrix, g_viewProjMatrix);
             g_modelMatrix = popMatrix();
-
 
             // * sphere
             pushMatrix(g_modelMatrix);
@@ -650,6 +648,84 @@ function drawPreview(g_modelMatrix, g_viewProjMatrix){
             g_vboArray[2].init();
             g_vboArray[2].switchToMe();
             g_vboArray[2].draw(g_modelMatrix, g_viewProjMatrix);
+            g_modelMatrix = popMatrix();
+
+            break;
+        case 3:
+            //draw grid
+            pushMatrix(g_modelMatrix);
+            g_vboArray[0].switchToMe();
+            g_vboArray[0].draw(g_modelMatrix, g_viewProjMatrix, true);
+            g_modelMatrix = popMatrix();
+
+            // * sphere
+            pushMatrix(g_modelMatrix);
+            g_modelMatrix.translate(1.2, 1.4, 1.5);
+            g_modelMatrix.rotate(0.8 * 180, 0, 0, 1);
+            g_modelMatrix.scale(0.3, 2, 0.3);
+            g_vboArray[2].setMaterial(20);
+            g_vboArray[2].init();
+            g_vboArray[2].switchToMe();
+            g_vboArray[2].draw(g_modelMatrix, g_viewProjMatrix);
+            g_modelMatrix = popMatrix();
+
+            // * sphere
+            pushMatrix(g_modelMatrix);
+            g_modelMatrix.translate(1.2, 1.4, 0.2);
+            g_modelMatrix.rotate(0.8 * 180, 0, 0, 1);
+            g_modelMatrix.scale(2, 0.1, 0.3);
+            g_vboArray[2].setMaterial(20);
+            g_vboArray[2].init();
+            g_vboArray[2].switchToMe();
+            g_vboArray[2].draw(g_modelMatrix, g_viewProjMatrix);
+            g_modelMatrix = popMatrix();
+
+            // * sphere
+            pushMatrix(g_modelMatrix);
+            g_modelMatrix.translate(1.2, 1.4, 1.5);
+            g_modelMatrix.rotate(0.8 * 180, 0, 0, 1);
+            g_modelMatrix.scale(0.3, 0.5, 2);
+            g_vboArray[2].setMaterial(20);
+            g_vboArray[2].init();
+            g_vboArray[2].switchToMe();
+            g_vboArray[2].draw(g_modelMatrix, g_viewProjMatrix);
+            g_modelMatrix = popMatrix();
+
+            // * cube
+            pushMatrix(g_modelMatrix);
+            g_modelMatrix.rotate(0.3 * 180, 1, 0, 0);
+            g_modelMatrix.scale(0.2, 0.3, 2.3);
+            g_modelMatrix.translate(-3.2, 0.2, 1.0);
+            g_modelMatrix.rotate(-0.8 * 180, 0, 0, 1);
+            g_vboArray[4].setMaterial(10);
+            g_vboArray[4].init();
+            g_vboArray[4].switchToMe();
+            g_vboArray[4].draw(g_modelMatrix, g_viewProjMatrix);
+            g_modelMatrix = popMatrix();
+
+            // * cube
+            pushMatrix(g_modelMatrix);
+            g_modelMatrix.rotate(0.3 * 180, 1, 0, 0);
+            g_modelMatrix.scale(0.2, 2, 0.3);
+            g_modelMatrix.translate(2.2, 0.2, 1.0);
+            g_modelMatrix.rotate(-0.8 * 180, 0, 1, 0);
+            g_modelMatrix.rotate(-0.8 * 180, 1, 0, 0);
+            g_vboArray[4].setMaterial(10);
+            g_vboArray[4].init();
+            g_vboArray[4].switchToMe();
+            g_vboArray[4].draw(g_modelMatrix, g_viewProjMatrix);
+            g_modelMatrix = popMatrix();
+
+            // * cube
+            pushMatrix(g_modelMatrix);
+            g_modelMatrix.rotate(0.3 * 180, 1, 0, 0);
+            g_modelMatrix.scale(1.2, 0.3, 0.3);
+            g_modelMatrix.translate(-0.2, 2.2, 1.0);
+            g_modelMatrix.rotate(-0.8 * 180, 0, 0, 1);
+            g_vboArray[4].setMaterial(13);
+            g_vboArray[4].init();
+            g_vboArray[4].switchToMe();
+            g_vboArray[4].draw(g_modelMatrix, g_viewProjMatrix);
             g_modelMatrix = popMatrix();
 
             break;

@@ -205,6 +205,69 @@ CScene.prototype.initScene = function (num) {
             this.item[iNow].rayScale(0.6, 1.2, 0.3);
             this.item[iNow].setMaterial(8);
             break;
+        case 3:
+            this.item.push(new CGeom(RT_GNDPLANE)); // Append gnd-plane to item[] array
+            iNow = this.item.length - 1; // get its array index.
+
+            // * sphere
+            this.item.push(new CGeom(RT_SPHERE));
+            iNow = this.item.length - 1;
+            this.item[iNow].setIdent();
+            this.item[iNow].rayTranslate(1.2, 1.4, 1.5);
+            this.item[iNow].rayRotate(0.8 * Math.PI, 0, 0, 1);
+            this.item[iNow].rayScale(0.3, 2, 0.3);
+            this.item[iNow].setMaterial(20);
+
+            // * sphere
+            this.item.push(new CGeom(RT_SPHERE));
+            iNow = this.item.length - 1;
+            this.item[iNow].setIdent();
+            this.item[iNow].rayTranslate(1.2, 1.4, 0.2);
+            this.item[iNow].rayRotate(0.8 * Math.PI, 0, 0, 1);
+            this.item[iNow].rayScale(2, 0.1, 0.3);
+            this.item[iNow].setMaterial(20);
+
+            // * sphere
+            this.item.push(new CGeom(RT_SPHERE));
+            iNow = this.item.length - 1;
+            this.item[iNow].setIdent();
+            this.item[iNow].rayTranslate(1.2, 1.4, 1.5);
+            this.item[iNow].rayRotate(0.8 * Math.PI, 0, 0, 1);
+            this.item[iNow].rayScale(0.3, 0.5, 2);
+            this.item[iNow].setMaterial(20);
+
+            // * cube
+            this.item.push(new CGeom(RT_BOX));
+            iNow = this.item.length - 1;
+            this.item[iNow].setIdent();
+            this.item[iNow].rayRotate(0.3 * Math.PI, 1, 0, 0);
+            this.item[iNow].rayScale(0.2, 0.3, 2.3);
+            this.item[iNow].rayTranslate(-3.2, 0.2, 1.0);
+            this.item[iNow].rayRotate(-0.8 * Math.PI, 0, 0, 1);
+            this.item[iNow].setMaterial(10);
+
+            // * cube
+            this.item.push(new CGeom(RT_BOX));
+            iNow = this.item.length - 1;
+            this.item[iNow].setIdent();
+            this.item[iNow].rayRotate(0.3 * Math.PI, 1, 0, 0);
+            this.item[iNow].rayScale(0.2, 2, 0.3);
+            this.item[iNow].rayTranslate(2.2, 0.2, 1.0);
+            this.item[iNow].rayRotate(-0.8 * Math.PI, 0, 1, 0);
+            this.item[iNow].rayRotate(-0.8 * Math.PI, 1, 0, 0);
+            this.item[iNow].setMaterial(10);
+
+            // * cube
+            this.item.push(new CGeom(RT_BOX));
+            iNow = this.item.length - 1;
+            this.item[iNow].setIdent();
+            this.item[iNow].rayRotate(0.3 * Math.PI, 1, 0, 0);
+            this.item[iNow].rayScale(1.2, 0.3, 0.3);
+            this.item[iNow].rayTranslate(-0.2, 2.2, 1.0);
+            this.item[iNow].rayRotate(-0.8 * Math.PI, 0, 0, 1);
+            this.item[iNow].setMaterial(13);
+
+            break;
         default:
             console.log(
                 "JT_tracer0-Scene file: CScene.initScene(",
