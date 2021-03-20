@@ -51,9 +51,9 @@ CScene.prototype.initScene = function (num) {
             this.item.push(new CGeom(RT_SPHERE));
             iNow = this.item.length - 1;
             this.item[iNow].setIdent();
-            this.item[iNow].rayRotate(-0.8*Math.PI, 0,0,1);
             this.item[iNow].rayScale(0.3, 1, 0.3);
-            this.item[iNow].rayTranslate(4, 3, 3);
+            this.item[iNow].rayTranslate(4, 1, 3);
+            this.item[iNow].rayRotate(-0.8*Math.PI, 0,0,1);
             this.item[iNow].setMaterial(12);
 
             // * sphere

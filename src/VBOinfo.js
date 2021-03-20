@@ -12,6 +12,18 @@ var axis_vboArr0 = new Float32Array ([
      0.00, 0.00, 1.0, 1.0,  	0.0, 0.0, 1.0, 1.0,	
 ]); 
 
+var axis_normal0= new Float32Array ([         
+    // Red X axis:
+     0.00, 0.00, 0.0, 1.0,	
+     1.00, 0.00, 0.0, 1.0,	
+    // green Y axis:
+     0.00, 0.00, 0.0, 1.0, 
+     0.00, 1.00, 0.0, 1.0,  
+    // blue Z axis:
+     0.00, 0.00, 0.0, 1.0,  	
+     0.00, 0.00, 1.0, 1.0,  
+]); 
+
 var axis_vboArr1 = new Float32Array([ 
     // Quad vertex coordinates(x,y in CVV); texture coordinates tx,ty
     -1.0, 1.0, 0.0, 1.0, // upper left corner  (borderless)

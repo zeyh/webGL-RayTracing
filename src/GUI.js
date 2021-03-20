@@ -19,36 +19,55 @@ datgui.domElement.id = 'datgui';
 function setRecursionDepth(selection){
     g_recurDepth = selection.value;
 }
+function lightOn(idx){
+    console.log(idx)
+    if(idx == 1){
+        g_headLightOn = !g_headLightOn;
+        document.getElementById("light1").innerHTML = g_headLightOn ? "Turn Light 1 Off" : "Turn Light 1 On"
+    
+    }
+    else{
+        g_worldLightOn = !g_worldLightOn;
+        document.getElementById("light2").innerHTML = g_worldLightOn ? "Turn Light 2 Off" : "Turn Light 2 On"
 
-function setControlPanel() {
+    }
+}
+
+function setControlPanel(g_modelMatrix, g_viewProjMatrix) {
     datgui.add(params, 'Lamp1PosX', -10.0, 10.0).onChange(
         function (value) {
             g_lamp0.I_pos.elements[0] = value;
+            drawAll(g_SceneNum, g_modelMatrix, g_viewProjMatrix);
         }
     );
     datgui.add(params, 'Lamp1PosY', -20.0, 20.0).onChange(
         function (value) {
             g_lamp0.I_pos.elements[1] = value;
+            drawAll(g_SceneNum, g_modelMatrix, g_viewProjMatrix);
         }
     );
     datgui.add(params, 'Lamp1PosZ', -10.0, 10.0).onChange(
         function (value) {
             g_lamp0.I_pos.elements[2] = value;
+            drawAll(g_SceneNum, g_modelMatrix, g_viewProjMatrix);
         }
     );
     datgui.add(params, 'Lamp2PosX', -10.0, 10.0).onChange(
         function (value) {
             g_lamp1.I_pos.elements[0] = value;
+            drawAll(g_SceneNum, g_modelMatrix, g_viewProjMatrix);
         }
     );
     datgui.add(params, 'Lamp2PosY', -20.0, 20.0).onChange(
         function (value) {
             g_lamp1.I_pos.elements[1] = value;
+            drawAll(g_SceneNum, g_modelMatrix, g_viewProjMatrix);
         }
     );
     datgui.add(params, 'Lamp2PosZ', -10.0, 10.0).onChange(
         function (value) {
             g_lamp1.I_pos.elements[2] = value;
+            drawAll(g_SceneNum, g_modelMatrix, g_viewProjMatrix);
         }
     );
 }
@@ -57,12 +76,14 @@ function setControlPanel() {
 /**
  *  capture and respond to all keyboard & mouse inputs/outputs.
  */
-function GUIbox() {
+function GUIbox(g_modelMatrix, g_viewProjMatrix) {
     //=============================================================================
     //==============================================================================
     // CONSTRUCTOR for one re-usable 'GUIbox' object that holds all data and fcns
     // needed to capture and respond to all user inputs/outputs.
-
+    this.g_modelMatrix = g_modelMatrix;
+    this.g_viewProjMatrix = g_viewProjMatrix;
+    
     this.isDrag = false; // mouse-drag: true while user holds down mouse button
 
     this.xCVV = 1.0; // Results found from last call to this.MouseToCVV()
@@ -116,13 +137,6 @@ GUIbox.prototype.init = function () {
         },
         false
     );
-
-    // REPORT initial mouse-drag totals on-screen:
-    document.getElementById("MouseDragResult").innerHTML =
-        "Mouse Drag totals (CVV coords):\t" +
-        this.xMdragTot.toFixed(5) +
-        ", \t" +
-        this.yMdragTot.toFixed(5);
 
     this.camYaw = Math.PI / 2.0; // (initially I aim in +y direction)
 
@@ -181,7 +195,9 @@ GUIbox.prototype.mouseDown = function (mev) {
     this.mouseToCVV(mev); // convert to CVV coordinates:
     this.xMpos = this.xCVV; // save current position, and...
     this.yMpos = this.yCVV;
-    this.isDrag = true; // set our mouse-dragging flag
+    if(mev.srcElement.tagName == 'CANVAS'){ //only drag if mouse is on canvas
+        this.isDrag = true; // set our mouse-dragging flag
+    }
 
     document.getElementById("MouseResult0").innerHTML =
         "GUIbox.mouseDown() at CVV coords x,y = " +
@@ -231,7 +247,7 @@ GUIbox.prototype.mouseMove = function (mev) {
         (this.camPitch * (180 / Math.PI)).toFixed(3) +
         "deg.";
     this.camAim(this.xMdragTot, -this.yMdragTot); // why negative y drag? feels
-    drawAll(); // we MOVED the camera -- re-draw everything!
+    drawAll(g_SceneNum, this.g_modelMatrix, this.g_viewProjMatrix); // we MOVED the camera -- re-draw everything!
 };
 
 /**
@@ -279,7 +295,7 @@ GUIbox.prototype.keyDown = function (kev) {
             g_sceneNum = 1; // (re-set onScene() button-handler, too)
             rayView.switchToMe(); // be sure OUR VBO & shaders are in use, then
             rayView.reload(); // re-transfer VBO contents and texture-map contents
-            drawAll();
+            drawAll(g_SceneNum, this.g_modelMatrix, this.g_viewProjMatrix);
             break;
         case "KeyT": // 't' or 'T' key: ray-trace!
             document.getElementById("KeyDown").innerHTML =
@@ -288,7 +304,7 @@ GUIbox.prototype.keyDown = function (kev) {
             g_myScene.makeRayTracedImage(); // (near end of traceSupplement.js)
             rayView.switchToMe(); // be sure OUR VBO & shaders are in use, then
             rayView.reload(); // re-transfer VBO contents and texture-map contents
-            drawAll(); // redraw BOTH viewports onscreen.
+            drawAll(g_SceneNum, this.g_modelMatrix, this.g_viewProjMatrix); // redraw BOTH viewports onscreen.
             break;
         //------------------WASD navigation-----------------
         case "KeyA":
@@ -400,7 +416,7 @@ GUIbox.prototype.keyDown = function (kev) {
             g_sceneNum = 1; // (re-set onScene() button-handler, too)
             rayView.switchToMe(); // be sure OUR VBO & shaders are in use, then
             rayView.reload(); // re-transfer VBO contents and texture-map contents
-            drawAll();
+            drawAll(g_SceneNum, this.g_modelMatrix, this.g_viewProjMatrix);
             break;
         case "KeyT": // 't' or 'T' key: ray-trace!
             document.getElementById("KeyDown").innerHTML =
@@ -409,7 +425,7 @@ GUIbox.prototype.keyDown = function (kev) {
             g_myScene.makeRayTracedImage(); // (near end of traceSupplement.js)
             rayView.switchToMe(); // be sure OUR VBO & shaders are in use, then
             rayView.reload(); // re-transfer VBO contents and texture-map contents
-            drawAll();
+            drawAll(g_SceneNum, this.g_modelMatrix, this.g_viewProjMatrix);
             break;
         //------------------WASD navigation-----------------
         case "KeyQ":
@@ -536,7 +552,7 @@ GUIbox.prototype.camFwd = function () {
     vec4.scale(fwd, fwd, this.camSpeed); // scale length to set velocity
     vec4.add(this.camAimPt, this.camAimPt, fwd); // add to BOTH points.
     vec4.add(this.camEyePt, this.camEyePt, fwd);
-    drawAll(); // show new result on-screen.
+    drawAll(g_SceneNum, this.g_modelMatrix, this.g_viewProjMatrix); // show new result on-screen.
 };
 
 /**
@@ -550,7 +566,7 @@ GUIbox.prototype.camRev = function () {
     vec4.scale(rev, rev, this.camSpeed); // scale length to set velocity
     vec4.add(this.camAimPt, this.camAimPt, rev); // add to BOTH points.
     vec4.add(this.camEyePt, this.camEyePt, rev);
-    drawAll(); // show new result on-screen.
+    drawAll(g_SceneNum, this.g_modelMatrix, this.g_viewProjMatrix); // show new result on-screen.
 };
 
 /**
@@ -568,7 +584,7 @@ GUIbox.prototype.camStrafe_L = function () {
     vec4.scale(rtSide, rtSide, -this.camSpeed); // scale length to set velocity,
     vec4.add(this.camAimPt, this.camAimPt, rtSide); // add to BOTH points.
     vec4.add(this.camEyePt, this.camEyePt, rtSide);
-    drawAll();
+    drawAll(g_SceneNum, this.g_modelMatrix, this.g_viewProjMatrix);
 };
 
 /**
@@ -584,7 +600,7 @@ GUIbox.prototype.camStrafe_R = function () {
     vec4.scale(rtSide, rtSide, this.camSpeed); // scale length to set velocity,
     vec4.add(this.camAimPt, this.camAimPt, rtSide); // add to BOTH points.
     vec4.add(this.camEyePt, this.camEyePt, rtSide);
-    drawAll();
+    drawAll(g_SceneNum, this.g_modelMatrix, this.g_viewProjMatrix);
 };
 
 GUIbox.prototype.camStrafe_Up = function () {
@@ -604,7 +620,7 @@ GUIbox.prototype.camStrafe_Up = function () {
     vec4.add(this.camEyePt, this.camEyePt, upSide);
     //console.log('AFTER\n camAimPt:', this.camAimPt, '\ncamEyePt:', this.camEyePt);
 
-    drawAll();
+    drawAll(g_SceneNum, this.g_modelMatrix, this.g_viewProjMatrix);
 };
 
 GUIbox.prototype.camStrafe_Dn = function () {
@@ -619,5 +635,5 @@ GUIbox.prototype.camStrafe_Dn = function () {
     vec4.scale(upSide, upSide, -this.camSpeed); // scale length to set -velocity;
     vec4.add(this.camAimPt, this.camAimPt, upSide); // add to BOTH points.
     vec4.add(this.camEyePt, this.camEyePt, upSide);
-    drawAll();
+    drawAll(g_SceneNum, this.g_modelMatrix, this.g_viewProjMatrix);
 };
