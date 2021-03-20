@@ -32,9 +32,10 @@
     </select>
     <br>
     <button type="button" onclick="onSceneButton()">Change Scene</button>
-    <button type="button" onclick="lightOn(1)" id="light1">Turn Light 1 Off</button>
-    <button type="button" onclick="lightOn(2)" id="light2">Turn Light 1 Off</button>
+    <button type="button" onclick="lightOn(1)" id="light1">Light 1 is On</button>
+    <button type="button" onclick="lightOn(2)" id="light2">Light 2 is On</button>
     <span>Recursion Depth: </span><select name="depth" id="depth" onchange="setRecursionDepth(this)">
+        <option value="0">0</option>
         <option value="1" selected="selected">1</option>
         <option value="2">2</option>
         <option value="3">3</option>

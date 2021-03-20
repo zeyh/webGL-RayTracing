@@ -418,7 +418,7 @@ VBO_genetic.prototype.switchToMe = function () {
         }
 
         // * [Lamp] & [Mouse Drag]
-        if (g_worldLightOn) {
+        if (g_headLightOn) {
             this.g_lamp0.I_pos.elements.set([
                 params.Lamp1PosX,
                 params.Lamp1PosY,
@@ -426,17 +426,17 @@ VBO_genetic.prototype.switchToMe = function () {
             ]);
             this.g_lamp0.I_ambi.elements.set([1.0, 1.0, 1.0]);
             this.g_lamp0.I_diff.elements.set([1.0, 1.0, 1.0]);
-            this.g_lamp0.I_spec.elements.set([1.0, 1.0, 1.0]);
+            this.g_lamp0.I_spec.elements.set([0.2, 0.2, 0.2]);
             gl.uniform3fv(
                 this.g_lamp0.u_pos,
-                this.g_lamp0.I_pos.elements.slice(0, 3)
+                g_lamp0.I_pos.elements.slice(0, 3)
             );
             gl.uniform3fv(this.g_lamp0.u_ambi, this.g_lamp0.I_ambi.elements); // ambient
             gl.uniform3fv(this.g_lamp0.u_diff, this.g_lamp0.I_diff.elements); // diffuse
             gl.uniform3fv(this.g_lamp0.u_spec, this.g_lamp0.I_spec.elements); // Specular
         }
 
-        if (g_headLightOn) {
+        if (g_worldLightOn) {
             this.g_lamp1.I_pos.elements.set([
                 params.Lamp2PosX,
                 params.Lamp2PosY,
@@ -444,10 +444,10 @@ VBO_genetic.prototype.switchToMe = function () {
             ]);
             this.g_lamp1.I_ambi.elements.set([0.6, 0.6, 0.6]);
             this.g_lamp1.I_diff.elements.set([1.0, 1.0, 1.0]);
-            this.g_lamp1.I_spec.elements.set([1.0, 1.0, 1.0]);
+            this.g_lamp1.I_spec.elements.set([0.2, 0.2, 0.2]);
             gl.uniform3fv(
                 this.g_lamp1.u_pos,
-                this.g_lamp1.I_pos.elements.slice(0, 3)
+                g_lamp1.I_pos.elements.slice(0, 3)
             );
             gl.uniform3fv(this.g_lamp1.u_ambi, this.g_lamp1.I_ambi.elements); // ambient
             gl.uniform3fv(this.g_lamp1.u_diff, this.g_lamp1.I_diff.elements); // diffuse

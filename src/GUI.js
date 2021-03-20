@@ -26,20 +26,27 @@ function setPMat(selection){
     g_patternType = selection.value;
 }
 function lightOn(idx){
-    console.log(idx)
+    if (!g_SceneNum || !g_modelMatrix || !g_viewProjMatrix) {
+        g_SceneNum = 0;
+        g_modelMatrix = new Matrix4();
+        g_viewProjMatrix = new Matrix4();
+    }
     if(idx == 1){
         g_headLightOn = !g_headLightOn;
-        document.getElementById("light1").innerHTML = g_headLightOn ? "Turn Light 1 Off" : "Turn Light 1 On"
+        document.getElementById("light1").innerHTML = g_headLightOn ? "Light 1 is On" : "Light 1 is Off";
+        drawAll(g_SceneNum, g_modelMatrix, g_viewProjMatrix);
+        
     }
-    else{
+    if(idx == 2){
         g_worldLightOn = !g_worldLightOn;
-        document.getElementById("light2").innerHTML = g_worldLightOn ? "Turn Light 2 Off" : "Turn Light 2 On"
+        document.getElementById("light2").innerHTML = g_worldLightOn ? "Light 2 is On" : "Light 2 is Off";
+        drawAll(g_SceneNum, g_modelMatrix, g_viewProjMatrix);
 
     }
 }
 
 function setControlPanel(g_modelMatrix, g_viewProjMatrix) {
-    datgui.add(params, 'Lamp1PosX', -10.0, 10.0).onChange(
+    datgui.add(params, 'Lamp1PosX', -20.0, 20.0).onChange(
         function (value) {
             g_lamp0.I_pos.elements[0] = value;
             drawAll(g_SceneNum, g_modelMatrix, g_viewProjMatrix);
@@ -51,13 +58,13 @@ function setControlPanel(g_modelMatrix, g_viewProjMatrix) {
             drawAll(g_SceneNum, g_modelMatrix, g_viewProjMatrix);
         }
     );
-    datgui.add(params, 'Lamp1PosZ', -10.0, 10.0).onChange(
+    datgui.add(params, 'Lamp1PosZ', -20.0, 20.0).onChange(
         function (value) {
             g_lamp0.I_pos.elements[2] = value;
             drawAll(g_SceneNum, g_modelMatrix, g_viewProjMatrix);
         }
     );
-    datgui.add(params, 'Lamp2PosX', -10.0, 10.0).onChange(
+    datgui.add(params, 'Lamp2PosX', -20.0, 20.0).onChange(
         function (value) {
             g_lamp1.I_pos.elements[0] = value;
             drawAll(g_SceneNum, g_modelMatrix, g_viewProjMatrix);
@@ -69,7 +76,7 @@ function setControlPanel(g_modelMatrix, g_viewProjMatrix) {
             drawAll(g_SceneNum, g_modelMatrix, g_viewProjMatrix);
         }
     );
-    datgui.add(params, 'Lamp2PosZ', -10.0, 10.0).onChange(
+    datgui.add(params, 'Lamp2PosZ', -20.0, 20.0).onChange(
         function (value) {
             g_lamp1.I_pos.elements[2] = value;
             drawAll(g_SceneNum, g_modelMatrix, g_viewProjMatrix);

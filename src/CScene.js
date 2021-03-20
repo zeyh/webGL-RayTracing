@@ -353,10 +353,10 @@ CScene.prototype.getColor = function (hits, eyePos) {
     let color1 = vec4.create();
     globalThis.HEADLIGHT = 0;
     let light0 = new Light(HEADLIGHT);
-    light0.updateLightPos();
+    // light0.updateLightPos();
     globalThis.WORLDLIGHT = 1;
     let light1 = new Light(WORLDLIGHT);
-    light1.updateLightPos();
+    // light1.updateLightPos();
 
     let myHit = hits.closest();
     if (myHit.hitNum == -1) {
@@ -487,9 +487,9 @@ function Light(idx) {
     this.setDefaultLight();
     if (this.idx == 0) {
         this.I_pos = vec4.fromValues(
-            g_lamp0.I_pos.elements[0],
-            g_lamp0.I_pos.elements[1],
-            g_lamp0.I_pos.elements[2],
+            params.Lamp1PosX,
+            params.Lamp1PosY,
+            params.Lamp1PosZ,
             1.0
         );
         this.I_ambi = vec4.fromValues(
@@ -512,9 +512,9 @@ function Light(idx) {
         );
     } else {
         this.I_pos = vec4.fromValues(
-            g_lamp1.I_pos.elements[0],
-            g_lamp1.I_pos.elements[1],
-            g_lamp1.I_pos.elements[2],
+            params.Lamp2PosX,
+            params.Lamp2PosY,
+            params.Lamp2PosZ,
             1.0
         );
         this.I_ambi = vec4.fromValues(
@@ -586,17 +586,29 @@ Light.prototype.getColor = function (myHit) {
 
 Light.prototype.updateLightPos = function () {
     if (this.idx == 0) {
+        // this.I_pos = vec4.fromValues(
+        //     g_lamp0.I_pos.elements[0],
+        //     g_lamp0.I_pos.elements[1],
+        //     g_lamp0.I_pos.elements[2],
+        //     1.0
+        // );
         this.I_pos = vec4.fromValues(
-            g_lamp0.I_pos.elements[0],
-            g_lamp0.I_pos.elements[1],
-            g_lamp0.I_pos.elements[2],
+            params.Lamp1PosX,
+            params.Lamp1PosY,
+            params.Lamp1PosZ,
             1.0
         );
     } else {
+        // this.I_pos = vec4.fromValues(
+        //     g_lamp1.I_pos.elements[0],
+        //     g_lamp1.I_pos.elements[1],
+        //     g_lamp1.I_pos.elements[2],
+        //     1.0
+        // );
         this.I_pos = vec4.fromValues(
-            g_lamp1.I_pos.elements[0],
-            g_lamp1.I_pos.elements[1],
-            g_lamp1.I_pos.elements[2],
+            params.Lamp2PosX,
+            params.Lamp2PosY,
+            params.Lamp2PosZ,
             1.0
         );
     }
