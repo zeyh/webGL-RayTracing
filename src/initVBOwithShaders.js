@@ -393,7 +393,7 @@ VBO_genetic.prototype.isReady = function (){ //very brief sanity check
 }
 
 
-VBO_genetic.prototype.draw = function (g_modelMatrix, g_viewProjMatrix) { //finally drawing🙏
+VBO_genetic.prototype.draw = function (g_modelMatrix, g_viewProjMatrix, isGrid) { //finally drawing🙏
     if (this.isReady() == false) {
         console.log(
             "ERROR! before" +
@@ -418,11 +418,14 @@ VBO_genetic.prototype.draw = function (g_modelMatrix, g_viewProjMatrix) { //fina
     this.NormMat.setInverseOf(g_modelMatrix);
 	this.NormMat.transpose();
     gl.uniformMatrix4fv(this.u_NormMatLoc, false, this.NormMat.elements);
-    if (this.indexBuffer != undefined) {
-        gl.drawElements(gl.TRIANGLES, this.numIndices, gl.UNSIGNED_BYTE, 0);
+    if (this.indexBuffer == undefined && isGrid) {
+        gl.drawArrays(gl.LINES, 0, this.numIndices); //special case for ground grid 
+    }
+    else if (this.indexBuffer == undefined && !isGrid) {
+        gl.drawArrays(gl.LINE_STRIP, 0, this.numIndices); //special case for ground grid 
     }
     else {
-        gl.drawArrays(gl.LINES, 0, this.numIndices); //special case for ground grid 
+        gl.drawElements(gl.TRIANGLES, this.numIndices, gl.UNSIGNED_BYTE, 0);
     }
 
 }

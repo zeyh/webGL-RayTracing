@@ -24,7 +24,6 @@ function lightOn(idx){
     if(idx == 1){
         g_headLightOn = !g_headLightOn;
         document.getElementById("light1").innerHTML = g_headLightOn ? "Turn Light 1 Off" : "Turn Light 1 On"
-    
     }
     else{
         g_worldLightOn = !g_worldLightOn;
@@ -199,11 +198,11 @@ GUIbox.prototype.mouseDown = function (mev) {
         this.isDrag = true; // set our mouse-dragging flag
     }
 
-    document.getElementById("MouseResult0").innerHTML =
-        "GUIbox.mouseDown() at CVV coords x,y = " +
-        this.xMpos.toFixed(5) +
-        ", " +
-        this.yMpos.toFixed(5);
+    // document.getElementById("MouseResult0").innerHTML =
+    //     "GUIbox.mouseDown() at CVV coords x,y = " +
+    //     this.xMpos.toFixed(5) +
+    //     ", " +
+    //     this.yMpos.toFixed(5);
     // console.log(
     //     "GUIbox.mouseDown(): xMpos,yMpos== " +
     //         this.xMpos.toFixed(5) +
@@ -236,16 +235,16 @@ GUIbox.prototype.mouseMove = function (mev) {
     this.yMpos = this.yCVV;
 
     // Report mouse-drag totals on our webpage:
-    document.getElementById("MouseDragResult").innerHTML =
-        "Mouse Drag totals (CVV coords):\t" +
-        this.xMdragTot.toFixed(5) +
-        ", \t" +
-        this.yMdragTot.toFixed(5) +
-        "<br>camYaw:" +
-        (this.camYaw * (180 / Math.PI)).toFixed(3) +
-        "deg.; camPitch:" +
-        (this.camPitch * (180 / Math.PI)).toFixed(3) +
-        "deg.";
+    // document.getElementById("MouseDragResult").innerHTML =
+    //     "Mouse Drag totals (CVV coords):\t" +
+    //     this.xMdragTot.toFixed(5) +
+    //     ", \t" +
+    //     this.yMdragTot.toFixed(5) +
+    //     "<br>camYaw:" +
+    //     (this.camYaw * (180 / Math.PI)).toFixed(3) +
+    //     "deg.; camPitch:" +
+    //     (this.camPitch * (180 / Math.PI)).toFixed(3) +
+    //     "deg.";
     this.camAim(this.xMdragTot, -this.yMdragTot); // why negative y drag? feels
     drawAll(g_SceneNum, this.g_modelMatrix, this.g_viewProjMatrix); // we MOVED the camera -- re-draw everything!
 };
@@ -264,11 +263,11 @@ GUIbox.prototype.mouseUp = function (mev) {
     this.yMpos = this.yCVV;
 
     // display it on our webpage, too...
-    document.getElementById("MouseResult0").innerHTML =
-        "GUIbox.mouseUp(       ) at CVV coords x,y = " +
-        this.xMpos.toFixed(5) +
-        ", " +
-        this.yMpos.toFixed(5);
+    // document.getElementById("MouseResult0").innerHTML =
+    //     "GUIbox.mouseUp(       ) at CVV coords x,y = " +
+    //     this.xMpos.toFixed(5) +
+    //     ", " +
+    //     this.yMpos.toFixed(5);
 };
 
 /**
@@ -277,19 +276,19 @@ GUIbox.prototype.mouseUp = function (mev) {
 GUIbox.prototype.keyDown = function (kev) {
     switch (kev.code) {
         case "Digit0":
-            document.getElementById("KeyDown").innerHTML =
-                "GUIbox.KeyDown() digit 0 key.(UNUSED)"; // print on webpage,
+            // document.getElementById("KeyDown").innerHTML =
+            //     "GUIbox.KeyDown() digit 0 key.(UNUSED)"; // print on webpage,
             console.log("digit 0 key.(UNUSED)"); // print on console.
             break;
         case "Digit1":
-            document.getElementById("KeyDown").innerHTML =
-                "guiBox.KeyDown() digit 1 key.(UNUSED)"; // print on webpage,
+            // document.getElementById("KeyDown").innerHTML =
+            //     "guiBox.KeyDown() digit 1 key.(UNUSED)"; // print on webpage,
             console.log("digit 1 key.(UNUSED)"); // print on console.
             break;
         //------------------Ray Tracing----------------------
         case "KeyC": // Clear the ray-traced image
-            document.getElementById("KeyDown").innerHTML =
-                "GUIbox.KeyDown() c/C key: CLEAR the ray-traced image buffer."; // print on webpage,
+            // document.getElementById("KeyDown").innerHTML =
+            //     "GUIbox.KeyDown() c/C key: CLEAR the ray-traced image buffer."; // print on webpage,
             console.log("c/C: CLEAR ray-traced img buf"); // print on console,
             g_myPic.setTestPattern(1); // solid orange.
             g_sceneNum = 1; // (re-set onScene() button-handler, too)
@@ -298,8 +297,8 @@ GUIbox.prototype.keyDown = function (kev) {
             drawAll(g_SceneNum, this.g_modelMatrix, this.g_viewProjMatrix);
             break;
         case "KeyT": // 't' or 'T' key: ray-trace!
-            document.getElementById("KeyDown").innerHTML =
-                "GUIbox.KeyDown() t/T key: TRACE a new image!"; // print on webpage,
+            // document.getElementById("KeyDown").innerHTML =
+            //     "GUIbox.KeyDown() t/T key: TRACE a new image!"; // print on webpage,
             console.log("t/T key: TRACE a new image!"); // print on console,
             g_myScene.makeRayTracedImage(); // (near end of traceSupplement.js)
             rayView.switchToMe(); // be sure OUR VBO & shaders are in use, then
@@ -308,52 +307,32 @@ GUIbox.prototype.keyDown = function (kev) {
             break;
         //------------------WASD navigation-----------------
         case "KeyA":
-            document.getElementById("KeyDown").innerHTML =
-                "GUIbox.KeyDown() a/A key. Strafe LEFT!";
+            // document.getElementById("KeyDown").innerHTML =
+            //     "GUIbox.KeyDown() a/A key. Strafe LEFT!";
             console.log("a/A key: Strafe LEFT!\n");
             this.camStrafe_L();
             break;
         case "KeyD":
-            document.getElementById("KeyDown").innerHTML =
-                "GUIbox.KeyDown() d/D key. Strafe RIGHT!";
+            // document.getElementById("KeyDown").innerHTML =
+            //     "GUIbox.KeyDown() d/D key. Strafe RIGHT!";
             console.log("d/D key: Strafe RIGHT!\n");
             this.camStrafe_R();
             break;
         case "KeyS":
-            document.getElementById("KeyDown").innerHTML =
-                "GUIbox.KeyDown() s/S key. Move REV!";
+            // document.getElementById("KeyDown").innerHTML =
+            //     "GUIbox.KeyDown() s/S key. Move REV!";
             console.log("s/S key: Move REV!\n");
             this.camRev();
             break;
         case "KeyW":
-            document.getElementById("KeyDown").innerHTML =
-                "GUIbox.keyDown() w/W key. Move FWD!";
+            // document.getElementById("KeyDown").innerHTML =
+            //     "GUIbox.keyDown() w/W key. Move FWD!";
             console.log("w/W key: Move FWD!\n");
             this.camFwd();
             break;
-        case "ArrowLeft":
-            document.getElementById("KeyDown").innerHTML =
-                "GUIbox.KeyDown() Arrow-Left,key=" + kev.key;
-            console.log("Arrow-Left key(UNUSED)");
-            break;
-        case "ArrowRight":
-            document.getElementById("KeyDown").innerHTML =
-                "GUIbox.KeyDown() Arrow-Right,key=" + kev.key;
-            console.log("Arrow-Right key(UNUSED)");
-            break;
-        case "ArrowUp":
-            document.getElementById("KeyDown").innerHTML =
-                "GUIbox.KeyDown() Arrow-Up,key=" + kev.key;
-            console.log("Arrow-Up key(UNUSED)");
-            break;
-        case "ArrowDown":
-            document.getElementById("KeyDown").innerHTML =
-                "GUIbox.KeyDown() Arrow-Down,key=" + kev.key;
-            console.log("Arrow-Down key(UNUSED)");
-            break;
         default:
-            document.getElementById("KeyDown").innerHTML =
-                "GUIbox.KeyDown() UNUSED key=" + kev.key;
+            // document.getElementById("KeyDown").innerHTML =
+            //     "GUIbox.KeyDown() UNUSED key=" + kev.key;
             console.log("UNUSED key:", kev.key);
             break;
     }
@@ -380,47 +359,37 @@ GUIbox.prototype.keyDown = function (kev) {
               "\n--kev.altKey:",  kev.altKey,   "\t--kev.metaKey:", kev.metaKey);
 */
     // On webpage, report EVERYTHING about this key-down event:
-    document.getElementById("KeyDown").innerHTML = ""; // clear old result
-    document.getElementById("KeyMod").innerHTML = "";
-    document.getElementById("KeyMod").innerHTML =
-        "   --kev.code:" +
-        kev.code +
-        "      --kev.key:" +
-        kev.key +
-        "<br>--kev.ctrlKey:" +
-        kev.ctrlKey +
-        " --kev.shiftKey:" +
-        kev.shiftKey +
-        "<br> --kev.altKey:" +
-        kev.altKey +
-        "  --kev.metaKey:" +
-        kev.metaKey;
+    // document.getElementById("KeyDown").innerHTML = ""; // clear old result
+    // document.getElementById("KeyMod").innerHTML = "";
+    // document.getElementById("KeyMod").innerHTML =
+    //     "   --kev.code:" +
+    //     kev.code +
+    //     "      --kev.key:" +
+    //     kev.key +
+    //     "<br>--kev.ctrlKey:" +
+    //     kev.ctrlKey +
+    //     " --kev.shiftKey:" +
+    //     kev.shiftKey +
+    //     "<br> --kev.altKey:" +
+    //     kev.altKey +
+    //     "  --kev.metaKey:" +
+    //     kev.metaKey;
 
     switch (kev.code) {
-        case "Digit0":
-            document.getElementById("KeyDown").innerHTML =
-                "GUIbox.KeyDown() digit 0 key.(UNUSED)"; // print on webpage,
-            console.log("digit 0 key.(UNUSED)"); // print on console.
-            break;
-        case "Digit1":
-            document.getElementById("KeyDown").innerHTML =
-                "guiBox.KeyDown() digit 1 key.(UNUSED)"; // print on webpage,
-            console.log("digit 1 key.(UNUSED)"); // print on console.
-            break;
         //------------------Ray Tracing----------------------
         case "KeyC": // Clear the ray-traced image
-            document.getElementById("KeyDown").innerHTML =
-                "GUIbox.KeyDown() c/C key: CLEAR the ray-traced image buffer."; // print on webpage,
+            // document.getElementById("KeyDown").innerHTML =
+            //     "GUIbox.KeyDown() c/C key: CLEAR the ray-traced image buffer."; // print on webpage,
             console.log("c/C: CLEAR ray-traced img buf"); // print on console,
             g_myPic.setTestPattern(1); // solid orange.
-            g_sceneNum = 1; // (re-set onScene() button-handler, too)
+            let g_sceneNum = 1; // (re-set onScene() button-handler, too)
             rayView.switchToMe(); // be sure OUR VBO & shaders are in use, then
             rayView.reload(); // re-transfer VBO contents and texture-map contents
             drawAll(g_SceneNum, this.g_modelMatrix, this.g_viewProjMatrix);
             break;
         case "KeyT": // 't' or 'T' key: ray-trace!
-            document.getElementById("KeyDown").innerHTML =
-                "GUIbox.KeyDown() t/T key: TRACE a new image!"; // print on webpage,
+            // document.getElementById("KeyDown").innerHTML =
+            //     "GUIbox.KeyDown() t/T key: TRACE a new image!"; // print on webpage,
             console.log("t/T key: TRACE a new image!"); // print on console,
             g_myScene.makeRayTracedImage(); // (near end of traceSupplement.js)
             rayView.switchToMe(); // be sure OUR VBO & shaders are in use, then
@@ -429,62 +398,42 @@ GUIbox.prototype.keyDown = function (kev) {
             break;
         //------------------WASD navigation-----------------
         case "KeyQ":
-            document.getElementById("KeyDown").innerHTML =
-                "GUIbox.keyDown() q/Q key. Strafe DOWN!";
+            // document.getElementById("KeyDown").innerHTML =
+            //     "GUIbox.keyDown() q/Q key. Strafe DOWN!";
             this.camStrafe_Dn();
             break;
         case "KeyE":
-            document.getElementById("KeyDown").innerHTML =
-                "GUIbox.keyDown() eE key. Strafe UP!";
+            // document.getElementById("KeyDown").innerHTML =
+            //     "GUIbox.keyDown() eE key. Strafe UP!";
             this.camStrafe_Up();
             break;
         case "KeyA":
-            document.getElementById("KeyDown").innerHTML =
-                "GUIbox.KeyDown() a/A key. Strafe LEFT!";
+            // document.getElementById("KeyDown").innerHTML =
+            //     "GUIbox.KeyDown() a/A key. Strafe LEFT!";
             // console.log("a/A key: Strafe LEFT!\n");
             this.camStrafe_L();
             break;
         case "KeyD":
-            document.getElementById("KeyDown").innerHTML =
-                "GUIbox.KeyDown() d/D key. Strafe RIGHT!";
+            // document.getElementById("KeyDown").innerHTML =
+            //     "GUIbox.KeyDown() d/D key. Strafe RIGHT!";
             // console.log("d/D key: Strafe RIGHT!\n");
             this.camStrafe_R();
             break;
         case "KeyS":
-            document.getElementById("KeyDown").innerHTML =
-                "GUIbox.KeyDown() s/S key. Move REV!";
+            // document.getElementById("KeyDown").innerHTML =
+            //     "GUIbox.KeyDown() s/S key. Move REV!";
             // console.log("s/S key: Move REV!\n");
             this.camRev();
             break;
         case "KeyW":
-            document.getElementById("KeyDown").innerHTML =
-                "GUIbox.keyDown() w/W key. Move FWD!";
+            // document.getElementById("KeyDown").innerHTML =
+            //     "GUIbox.keyDown() w/W key. Move FWD!";
             // console.log("w/W key: Move FWD!\n");
             this.camFwd();
             break;
-        case "ArrowLeft":
-            document.getElementById("KeyDown").innerHTML =
-                "GUIbox.KeyDown() Arrow-Left,key=" + kev.key;
-            console.log("Arrow-Left key(UNUSED)");
-            break;
-        case "ArrowRight":
-            document.getElementById("KeyDown").innerHTML =
-                "GUIbox.KeyDown() Arrow-Right,key=" + kev.key;
-            console.log("Arrow-Right key(UNUSED)");
-            break;
-        case "ArrowUp":
-            document.getElementById("KeyDown").innerHTML =
-                "GUIbox.KeyDown() Arrow-Up,key=" + kev.key;
-            console.log("Arrow-Up key(UNUSED)");
-            break;
-        case "ArrowDown":
-            document.getElementById("KeyDown").innerHTML =
-                "GUIbox.KeyDown() Arrow-Down,key=" + kev.key;
-            console.log("Arrow-Down key(UNUSED)");
-            break;
         default:
-            document.getElementById("KeyDown").innerHTML =
-                "GUIbox.KeyDown() UNUSED key=" + kev.key;
+            // document.getElementById("KeyDown").innerHTML =
+            //     "GUIbox.KeyDown() UNUSED key=" + kev.key;
             console.log("UNUSED key:", kev.key);
             break;
     }

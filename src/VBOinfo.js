@@ -116,6 +116,83 @@ var cube_indices = new Uint8Array([
    20,21,22,  20,22,23     // back
 ]);
 
+var diskVert = appendDisk(2);
+function appendDisk(rad) {
+    //==============================================================================
+    // Create a set of vertices to draw a grid of colored lines that form a disk of
+    // radius 'rad' in the xy plane centered at world-space origin (x=y=z=0)
+    // and store them in local array vertSet[].  
+    // THEN:
+    // Append the contents of vertSet[] to existing contents of the this.vboContents 
+    // array; update this.vboVerts to include these new verts for drawing.
+    // NOTE: use gl.drawArrays(gl.GL_LINES,...) to draw these vertices.
+      if(rad == undefined) rad = 3;   // default value.
+      //Set # of lines in grid--------------------------------------
+      let xyMax	= rad;    // grid size; extends to cover +/-xyMax in x and y.
+      let xCount = rad*5 +1;	// # of lines of constant-x to draw to make the grid 
+      let yCount = rad*5 +1;	// # of lines of constant-y to draw to make the grid 
+                                // xCount, yCount MUST be >1, and should be odd.
+                                // (why odd#? so that we get lines on the x,y axis)
+      var vertsPerLine =2;    // # vertices stored in vertSet[] for each line;
+      var vertCount = (xCount + yCount) * vertsPerLine;
+      var vertSet = new Float32Array(vertCount * 4); 
+          // This array will hold (xCount+yCount) lines, kept as
+      
+        var xColr = vec4.fromValues(1.0, 1.0, 0.3, 1.0);	 
+        var yColr = vec4.fromValues(0.3, 1.0, 1.0, 1.0);   
+    
+        var xgap = 2*xyMax/(xCount-2);		// Spacing between lines in x,y;
+        var ygap = 2*xyMax/(yCount-2);		// (why 2*xyMax? grid spans +/- xyMax).
+      var xNow;           // x-value of the current line we're drawing
+      var yNow;           // y-value of the current line we're drawing.
+      var diff;           // half-length of each line we draw.
+      var line = 0;       // line-number (we will draw xCount or yCount lines, each
+                          // made of vertsPerLine vertices),
+      var v = 0;          // vertex-counter, used for the entire grid;
+      var idx = 0;        // vertSet[] array index.
+      //----------------------------------------------------------------------------
+      // 1st BIG LOOP: makes all lines of constant-x
+      for(line=0; line<xCount; line++) {   // for every line of constant x,
+        xNow = -xyMax + (line+0.5)*xgap;       // find the x-value of this line,    
+        diff = Math.sqrt(rad*rad - xNow*xNow);  // find +/- y-value of this line,
+        for(i=0; i<vertsPerLine; i++, v++, idx += 4) 
+        { // for every vertex in this line,  find x,y,z,w;  r,g,b,a;
+          // and store them sequentially in vertSet[] array.
+          // we already know the xNow value for this vertex; find the yNow:
+          if(i==0) yNow = -diff;  // line start
+          else yNow = diff;       // line end.
+          // set all values for this vertex:
+          vertSet[idx  ] = xNow;            // x value
+          vertSet[idx+1] = yNow;            // y value
+          vertSet[idx+2] = 0.0;             // z value
+          vertSet[idx+3] = 1.0;             // w;
+        }
+      }
+      //---------------------------------------------------------------------------
+      // 2nd BIG LOOP: makes all lines of constant-y
+      for(line=0; line<yCount; line++) {   // for every line of constant y,
+        yNow = -xyMax + (line+0.5)*ygap;       // find the y-value of this line,  
+        diff = Math.sqrt(rad*rad - yNow*yNow);  // find +/- y-value of this line,  
+        for(i=0; i<vertsPerLine; i++, v++, idx += 4) 
+        { // for every vertex in this line,  find x,y,z,w;  r,g,b,a;
+          // and store them sequentially in vertSet[] array.
+          // We already know  yNow; find the xNow:
+          if(i==0) xNow = -diff;  // line start
+          else xNow = diff;       // line end.
+          // Set all values for this vertex:
+          vertSet[idx  ] = xNow;            // x value
+          vertSet[idx+1] = yNow;            // y value
+          vertSet[idx+2] = 0.0;             // z value
+          vertSet[idx+3] = 1.0;             // w;
+        }
+      }
+      // Now APPEND this to existing VBO contents:
+      // Make a new array (local) big enough to hold BOTH vboContents & vertSet:
+    return vertSet;
+}
+
+
+
 var [sphere_vertices, sphere_colors,sphere_indices] = generate_sphereVBOinfo(12, 0.9);
 var [sphere_vertices2, sphere_colors2,sphere_indices2] = generate_sphereVBOinfo(4, 1.2);
 var sphere_normals = sphere_vertices;
@@ -172,12 +249,13 @@ function generate_sphereVBOinfo(sphere_div, colorFactor){
     return [vertices, colors, indices];
 }
 
-var [grid_vertices, grid_colors] = generate_gridVBOinfo(20);
+var [grid_vertices, grid_colors] = generate_gridVBOinfo(50);
 var grid_normals = grid_vertices;
+
 function generate_gridVBOinfo(xymax){
     var floatsPerVertex = 3; // # of Float32Array elements used for each vertex
-    var xcount = 100; // # of lines to draw in x,y to make the grid.
-    var ycount = 100;
+    var xcount = 101; // # of lines to draw in x,y to make the grid.
+    var ycount = 101;
     // var xymax = 50.0; // grid size; extends to cover +/-xymax in x and y.
     var xColr = new Float32Array([0.3, 0.3, 0.3]); // bright yellow
     var yColr = new Float32Array([0.8, 0.8, 0.8]); // bright green.

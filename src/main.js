@@ -19,17 +19,18 @@ References: besides the inline links, the code is modified from
     Done: 2 more user-adjustable 3D light positions [10]
     Done:  In ray-traced result, show at least 2 different Phong materials on different surfaces simultaneously.
     Done: recursive mirror-like reflections and 
-    Almost done: adjustable depth 
-    * Almost Done: show 3 transformed sphere
-    => 62
+    Done: adjustable depth 
+    Done: show 3 transformed sphere
+    Done: show webGL 2 phong materials [5]
+    Done: 3 or more transformed spheres [5]
+    Done: cube transform non-uniform shape distortion [5]
+    * Almost Done: 4 distinct 3d Scnenes [10]
+    => 80
 
     ? TODO overlapped shadows [7]
-    ? Todo show webGL 2 phong materials [5]
-    ? CGeom: 3 or more transformed spheres [5]
-    ? cube transform non-uniform shape distortion [5]
     ? 3d 3D checkerboard [5]
+    
 
-    TODO 4 distinct 3D Scenes [10]
     TODO More Geometric Shapes cylinder torus plus ray tracing [5 each]
     TODO Soft Shadows [5]
     TODO Transparency with Refraction [10]
@@ -281,18 +282,6 @@ var gui = new GUIbox(g_modelMatrix, g_viewProjMatrix);
 
 setControlPanel(g_modelMatrix, g_viewProjMatrix);
 
-function lightOn(idx){
-    console.log(idx)
-    if(idx == 1){
-        g_headLightOn = !g_headLightOn;
-        document.getElementById("light1").innerHTML = g_headLightOn ? "Turn Light 1 Off" : "Turn Light 1 On"
-    }
-    else{
-        g_worldLightOn = !g_worldLightOn;
-        document.getElementById("light2").innerHTML = g_worldLightOn ? "Turn Light 2 Off" : "Turn Light 2 On"
-
-    }
-}
 
 var g_vboArray;
 var g_shadingScheme = { //[plane, cube, cube2, sphere, sphere2, cube3] 
@@ -313,7 +302,9 @@ function initVBOs(currScheme) {
     sphere_test.init();
     var cube = new VBO_genetic(currScheme[0], currScheme[1], cube_vertices, cube_colors, cube_normals, cube_indices, currScheme[2], 11);
     cube.init();
-    g_vboArray = [grid, plane, sphere_test, sphere, cube];
+    var disk = new VBO_genetic(diffuseVert, diffuseFrag, diskVert, diskVert, diskVert, null, 0);
+    disk.init();
+    g_vboArray = [grid, plane, sphere_test, sphere, cube, disk];
 }
 
 // ! Ray Tracer Objects
@@ -324,8 +315,8 @@ var g_myScene = new CScene(); // Create our ray-tracing object;
 
 // this contains our complete 3D scene & its camera
 // used to write a complete ray-traced image to the CImgBuf object 'g_myPic' given as argument.
-var g_SceneNum = 0; // scene-selector number; 0,1,2,... G_SCENE_MAX-1
-var G_SCENE_MAX = 1; // Number of scenes defined.
+var g_SceneNum = 1; // scene-selector number; 0,1,2,... G_SCENE_MAX-1
+var G_SCENE_MAX = 2; // Number of scenes defined.
 var g_AAcode = 1; // Antialiasing setting: 1 == NO antialiasing at all. 2,3,4... == supersamples: 2x2, 3x3, 4x4, ...
 var G_AA_MAX = 4; // highest super-sampling number allowed.
 var g_isJitter = 0; // ==1 for jitter, ==0 for no jitter.
@@ -357,7 +348,6 @@ function main() {
 
     globalThis.g_modelMatrix = new Matrix4();
     globalThis.g_viewProjMatrix = new Matrix4();
-    drawAll(g_SceneNum, g_modelMatrix, g_viewProjMatrix);
 
     g_myScene.makeRayTracedImage(); // run the ray-tracer
     rayView.switchToMe(); // be sure OUR VBO & shaders are in use, then
@@ -382,7 +372,7 @@ function onSceneButton() {
     // ! transfer g_myPic's new contents to the GPU;
     rayView.switchToMe(); // be sure OUR VBO & shaders are in use, then
     rayView.reload(); // re-transfer VBO contents and texture-map contents
-    drawAll(g_SceneNum);
+    drawAll(g_SceneNum,  g_modelMatrix, g_viewProjMatrix);
 }
 
 /**
@@ -440,17 +430,7 @@ function drawPreview(g_modelMatrix, g_viewProjMatrix){
             //draw grid
             pushMatrix(g_modelMatrix);
             g_vboArray[0].switchToMe();
-            g_vboArray[0].draw(g_modelMatrix, g_viewProjMatrix);
-            g_modelMatrix = popMatrix();
-
-            // * draw sphere
-            pushMatrix(g_modelMatrix);
-            g_modelMatrix.setScale(1.8, 1.8, 1.8);
-            g_modelMatrix.translate(-0.5, 2, 2.0);
-            g_vboArray[2].setMaterial(9);
-            g_vboArray[2].init();
-            g_vboArray[2].switchToMe();
-            g_vboArray[2].draw(g_modelMatrix, g_viewProjMatrix);
+            g_vboArray[0].draw(g_modelMatrix, g_viewProjMatrix, true);
             g_modelMatrix = popMatrix();
 
             // * draw sphere
@@ -467,8 +447,7 @@ function drawPreview(g_modelMatrix, g_viewProjMatrix){
             pushMatrix(g_modelMatrix);
             g_modelMatrix.scale(0.3, 1, 0.3);
             g_modelMatrix.translate(4, 1, 3);
-            g_modelMatrix.rotate(-0.8*Math.PI, 0,0,1);
-
+            g_modelMatrix.rotate(-0.8 * 180, 0, 0, 1);
             g_vboArray[2].setMaterial(12);
             g_vboArray[2].init();
             g_vboArray[2].switchToMe();
@@ -479,16 +458,207 @@ function drawPreview(g_modelMatrix, g_viewProjMatrix){
             pushMatrix(g_modelMatrix);
             g_modelMatrix.setScale(0.5, 0.5, 2);
             g_modelMatrix.translate(-5, 1.2, 1.0);
-            g_modelMatrix.rotate(-0.8*Math.PI, 0,0,1);
+            g_modelMatrix.rotate(-0.8 * 180, 0, 0, 1);
             g_vboArray[2].setMaterial(14);
             g_vboArray[2].init();
             g_vboArray[2].switchToMe();
             g_vboArray[2].draw(g_modelMatrix, g_viewProjMatrix);
             g_modelMatrix = popMatrix();
+
+            // * disk
+            pushMatrix(g_modelMatrix);
+            g_modelMatrix.translate(0.2, 0.4, 0.0);
+            g_modelMatrix.rotate(0.8 * 180, 0, 1, 0);
+            g_modelMatrix.scale(2, 1, 0.001);
+            g_vboArray[2].setMaterial(2);
+            g_vboArray[2].init();
+            g_vboArray[2].switchToMe();
+            g_vboArray[2].draw(g_modelMatrix, g_viewProjMatrix);
+            g_modelMatrix = popMatrix();
+
+            // * disk
+            pushMatrix(g_modelMatrix);
+            g_modelMatrix.rotate(0.8 * 180, 1, 0, 0);
+            g_modelMatrix.translate(0.2, 0.4, 0.0);
+            g_modelMatrix.rotate(0.3 * 180, 0, 0, 1);
+            g_modelMatrix.scale(0.4, 1.2, 0.001);
+            g_vboArray[2].setMaterial(2);
+            g_vboArray[2].init();
+            g_vboArray[2].switchToMe();
+            g_vboArray[2].draw(g_modelMatrix, g_viewProjMatrix);
+            g_modelMatrix = popMatrix();
+
+            // * disk
+            pushMatrix(g_modelMatrix);
+            g_modelMatrix.rotate(0.8 * 180, 1, 0, 0);
+            g_modelMatrix.translate(0.2, 0.4, 0.0);
+            g_modelMatrix.rotate(0.4 * 180, 1, 0, 0);
+            g_modelMatrix.scale(1, 0.3, 0.001);
+            g_vboArray[2].setMaterial(2);
+            g_vboArray[2].init();
+            g_vboArray[2].switchToMe();
+            g_vboArray[2].draw(g_modelMatrix, g_viewProjMatrix);
+            g_modelMatrix = popMatrix();
+
             break;
         case 1:
+            //draw grid
+            pushMatrix(g_modelMatrix);
+            g_vboArray[0].switchToMe();
+            g_vboArray[0].draw(g_modelMatrix, g_viewProjMatrix, true);
+            g_modelMatrix = popMatrix();
+
+            // * sphere
+            pushMatrix(g_modelMatrix);
+            g_modelMatrix.scale(0.8, 0.6, 0.4);
+            g_modelMatrix.translate(0, -3.2, 1.0);
+            g_vboArray[2].setMaterial(12);
+            g_vboArray[2].init();
+            g_vboArray[2].switchToMe();
+            g_vboArray[2].draw(g_modelMatrix, g_viewProjMatrix);
+            g_modelMatrix = popMatrix();
+
+
+            // * sphere
+            pushMatrix(g_modelMatrix);
+            g_modelMatrix.scale(0.3, 3.3, 0.3);
+            g_modelMatrix.translate(3, 1.2, 1.0);
+            g_vboArray[2].setMaterial(6);
+            g_vboArray[2].init();
+            g_vboArray[2].switchToMe();
+            g_vboArray[2].draw(g_modelMatrix, g_viewProjMatrix);
+            g_modelMatrix = popMatrix();
+
+
+            // * sphere
+            pushMatrix(g_modelMatrix);
+            g_modelMatrix.scale(0.1, 4.6, 0.4);
+            g_modelMatrix.translate(0, 0.2, 0.0);
+            g_vboArray[2].setMaterial(13);
+            g_vboArray[2].init();
+            g_vboArray[2].switchToMe();
+            g_vboArray[2].draw(g_modelMatrix, g_viewProjMatrix);
+            g_modelMatrix = popMatrix();
+
+            // * cube
+            pushMatrix(g_modelMatrix);
+            g_modelMatrix.rotate(0.3 * 180, 1, 0, 0);
+            g_modelMatrix.scale(0.2, 0.3, 1.3);
+            g_modelMatrix.translate(0.2, 0.2, 1.0);
+            g_modelMatrix.rotate(-0.8 * 180, 0, 0, 1);
+            g_modelMatrix.rotate(-0.8 * 180, 0, 1, 0);
+            g_vboArray[4].setMaterial(10);
+            g_vboArray[4].init();
+            g_vboArray[4].switchToMe();
+            g_vboArray[4].draw(g_modelMatrix, g_viewProjMatrix);
+            g_modelMatrix = popMatrix();
+
+            // * cube
+            pushMatrix(g_modelMatrix);
+            g_modelMatrix.rotate(0.3 * 180, 1, 0, 0);
+            g_modelMatrix.scale(0.2, 0.3, 1.3);
+            g_modelMatrix.translate(0.2, 1.2, 1.0);
+            g_modelMatrix.rotate(-0.8 * 180, 0, 0, 1);
+            g_modelMatrix.rotate(-0.8 * 180, 1, 0, 0);
+            g_vboArray[4].setMaterial(10);
+            g_vboArray[4].init();
+            g_vboArray[4].switchToMe();
+            g_vboArray[4].draw(g_modelMatrix, g_viewProjMatrix);
+            g_modelMatrix = popMatrix();
+
+            // * cube
+            pushMatrix(g_modelMatrix);
+            g_modelMatrix.rotate(0.8 * 180, 0, 0, 1);
+            g_modelMatrix.translate(0, 2.4, 1.0);
+            g_modelMatrix.scale(0.8, 0.2, 1);
+            g_modelMatrix.rotate(0.3 * 180, 0, 0, 1);
+            g_vboArray[4].setMaterial(14);
+            g_vboArray[4].init();
+            g_vboArray[4].switchToMe();
+            g_vboArray[4].draw(g_modelMatrix, g_viewProjMatrix);
+            g_modelMatrix = popMatrix();
+
+            break;
+        case 2:
+            //draw grid
+            pushMatrix(g_modelMatrix);
+            g_vboArray[0].switchToMe();
+            g_vboArray[0].draw(g_modelMatrix, g_viewProjMatrix, true);
+            g_modelMatrix = popMatrix();
+
+            // * cube
+            pushMatrix(g_modelMatrix);
+            g_modelMatrix.rotate(0.8 * 180, 0, 0, 1);
+            g_modelMatrix.scale(1, 1, 0.3);
+            g_modelMatrix.translate(1.2, 1.4, 1.0);
+            g_modelMatrix.rotate(0.8 * 180, 0, 0, 1);
+            g_vboArray[4].setMaterial(18);
+            g_vboArray[4].init();
+            g_vboArray[4].switchToMe();
+            g_vboArray[4].draw(g_modelMatrix, g_viewProjMatrix);
+            g_modelMatrix = popMatrix();
+
+            // * cube
+            pushMatrix(g_modelMatrix);
+            g_modelMatrix.rotate(0.8 * 180, 0, 0, 1);
+            g_modelMatrix.scale(1, 1, 0.3);
+            g_modelMatrix.translate(1.2, 1.4, 1.3);
+            g_modelMatrix.rotate(0.3 * 180, 0, 1, 0);
+            g_vboArray[4].setMaterial(18);
+            g_vboArray[4].init();
+            g_vboArray[4].switchToMe();
+            g_vboArray[4].draw(g_modelMatrix, g_viewProjMatrix);
+            g_modelMatrix = popMatrix();
+
+            // * disk
+            pushMatrix(g_modelMatrix);
+            g_modelMatrix.rotate(0.8 * 180, 1, 0, 0);
+            g_modelMatrix.translate(1.2, 0.4, -3.0);
+            g_modelMatrix.rotate(0.8 * 180, 0, 0, 1);
+            g_modelMatrix.scale(1, 1, 0.0001);
+            g_vboArray[2].setMaterial(19);
+            g_vboArray[2].init();
+            g_vboArray[2].switchToMe();
+            g_vboArray[2].draw(g_modelMatrix, g_viewProjMatrix);
+            g_modelMatrix = popMatrix();
+
+            // * sphere
+            pushMatrix(g_modelMatrix);
+            g_vboArray[2].setMaterial(6);
+            g_vboArray[2].init();
+            g_vboArray[2].switchToMe();
+            g_vboArray[2].draw(g_modelMatrix, g_viewProjMatrix);
+            g_modelMatrix = popMatrix();
+
+            // * sphere
+            pushMatrix(g_modelMatrix);
+            g_modelMatrix.translate(1.2, 1.4, 0.2);
+            g_modelMatrix.rotate(0.8 * 180, 0, 0, 1);
+            g_modelMatrix.scale(0.3, 0.5, 0.3);
+            g_vboArray[2].setMaterial(7);
+            g_vboArray[2].init();
+            g_vboArray[2].switchToMe();
+            g_vboArray[2].draw(g_modelMatrix, g_viewProjMatrix);
+            g_modelMatrix = popMatrix();
+
+            // * sphere
+            pushMatrix(g_modelMatrix);
+            g_modelMatrix.translate(-1, 2.4, 1.0);
+            g_modelMatrix.rotate(0.8 * 180, 1, 0, 0);
+            g_modelMatrix.scale(0.6, 1.2, 0.3);
+            g_vboArray[2].setMaterial(8);
+            g_vboArray[2].init();
+            g_vboArray[2].switchToMe();
+            g_vboArray[2].draw(g_modelMatrix, g_viewProjMatrix);
+            g_modelMatrix = popMatrix();
+
             break;
         default:
+            //draw grid
+            pushMatrix(g_modelMatrix);
+            g_vboArray[0].switchToMe();
+            g_vboArray[0].draw(g_modelMatrix, g_viewProjMatrix);
+            g_modelMatrix = popMatrix();
             break;
     }
 }
@@ -808,10 +978,11 @@ function onJitterButton() {
 }
 
 function onBrowserResize(g_SceneNum, g_modelMatrix, g_viewProjMatrix) {
-    //=============================================================================
-    // Called when user re-sizes their browser window , because our HTML file
-    // contains:  <body onload="main()" onresize="onBrowserResize()">
-
+    if(!g_SceneNum || !g_modelMatrix || !g_viewProjMatrix){
+        g_SceneNum = 0;
+        g_modelMatrix = new Matrix4();
+        g_viewProjMatrix = new Matrix4();
+    }
     //Make a square canvas/CVV fill the SMALLER of the width/2 or height:
     if (innerWidth > 2 * innerHeight) {
         // fit to brower-window height

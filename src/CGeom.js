@@ -2,6 +2,7 @@ const RT_GNDPLANE = 0;
 const RT_SPHERE = 1;
 const RT_BOX = 2;
 const RT_CYLINDER = 3;
+const RT_DISK = 4;
 function CGeom(shapeSelect) {
     if (shapeSelect == undefined) shapeSelect = RT_GNDPLANE; // default
     this.shapeType = shapeSelect;
@@ -32,6 +33,17 @@ function CGeom(shapeSelect) {
             this.traceMe = function (inR, hit) {
                 this.traceCylinder(inR, hit);
             };
+            break;
+        case RT_DISK:
+            this.traceMe = function(inR,hit) { this.traceDisk(inR,hit);   };
+            this.diskRad = 1.0;   // default radius of disk centered at origin
+            // Disk line-spacing is set to 61/107 xgap,ygap  (ratio of primes)
+            // disk line-width is set to 3* lineWidth, and it swaps lineColor & gapColor. 
+            this.xgap = 61/107;	// line-to-line spacing: a ratio of primes.
+            this.ygap = 61/107;
+            this.lineWidth = 0.1;	// fraction of xgap used for grid-line width
+            this.lineColor = vec4.fromValues(0.1,0.5,0.1,1.0);  // RGBA green(A==opacity)
+            this.gapColor = vec4.fromValues( 0.9,0.9,0.9,1.0);  // near-white
             break;
         default:
             console.log(
@@ -228,7 +240,98 @@ CGeom.prototype.traceCylinder = function (inRay, myHit) {
     // myHit.hitNum = 1;
 
 }
+CGeom.prototype.traceDisk = function (inRay, myHit) {
+    //==============================================================================
+    // Find intersection of CRay object 'inRay' with a flat, circular disk in the
+    // xy plane, centered at the origin, with radius this.diskRad,
+    // and store the ray/disk intersection information on CHit object 'hitMe'.
+    // NO return value.
+    // (old versions returned an integer 0,1, or -1: see hitMe.hitNum)
+    // Set CHit.hitNum ==  -1 if ray MISSES the disk
+    //                 ==   0 if ray hits the disk BETWEEN lines
+    //                 ==   1 if ray hits the disk ON the lines
+    //
+    //  Uses the EXACT SAME steps developed for this.traceGrid(), EXCEPT:
+    //  if the hit-point is > diskRad distance from origin, the ray MISSED the disk.
 
+    //------------------ Transform 'inRay' by this.worldRay2model matrix;
+    var rayT = new CRay(); // create a local transformed-ray variable.
+    vec4.copy(rayT.orig, inRay.orig); // memory-to-memory copy.
+    vec4.copy(rayT.dir, inRay.dir);
+    // (DON'T do this: rayT = inRay; // that sets rayT
+    // as a REFERENCE to inRay. Any change to rayT is
+    // also a change to inRay (!!).
+    vec4.transformMat4(rayT.orig, inRay.orig, this.worldRay2model);
+    vec4.transformMat4(rayT.dir, inRay.dir, this.worldRay2model);
+    //------------------End ray-transform.
+
+    // find ray/disk intersection: t0 == value where ray hits the plane at z=0.
+    var t0 = -rayT.orig[2] / rayT.dir[2]; // (disk is in z==0 plane)
+
+    // The BIG QUESTION:  ? Did we just find a hit-point for inRay
+    // =================  ? that is CLOSER to camera than myHit?
+    if (t0 < 0 || t0 > myHit.t0) {
+        return; // NO. Hit-point is BEHIND us, or it's further away than myHit.
+        // Leave myHit unchanged. Don't do any further calcs.   Bye!
+    }
+    // OK, so we hit the plane at (model space) z==0;
+    // ? But did we hit the disk itself?
+    // compute the x,y,z,w point where inRay hit the grid-plane in MODEL coords:
+    // vec4.scaleAndAdd(out,a,b,scalar) sets out = a + b*scalar
+    var modelHit = vec4.create();
+    vec4.scaleAndAdd(modelHit, rayT.orig, rayT.dir, t0);
+    if (
+        modelHit[0] * modelHit[0] + modelHit[1] * modelHit[1] >
+        this.diskRad * this.diskRad
+    ) {
+        // ?Did ray hit within disk radius?
+        return; // NO.  Ray MISSED the disk.
+        // Leave myHit unchanged. Don't do any further calcs. Bye!
+    }
+    // YES! we found a better hit-point!
+    // Update myHit to describe it------------------------------------------------
+    myHit.t0 = t0; // record ray-length, and
+    myHit.hitGeom = this; // record this CGeom object as the one we hit, and
+    vec4.copy(myHit.modelHitPt, modelHit); // record the model-space hit-pt, and
+    // compute the x,y,z,w point where inRay hit the grid-plane in WORLD coords:
+    vec4.scaleAndAdd(myHit.hitPt, inRay.orig, inRay.dir, myHit.t0);
+    // set 'viewN' member to the reversed, normalized inRay.dir vector:
+    vec4.negate(myHit.viewN, inRay.dir);
+    // ( CAREFUL! vec4.negate() changes sign of ALL components: x,y,z,w !!
+    // inRay.dir MUST be a vector, not a point, to ensure w sign has no effect)
+    vec4.normalize(myHit.viewN, myHit.viewN); // ensure a unit-length vector.
+    // Now find surface normal:
+    // in model space we know it's always +z,
+    // but we need to TRANSFORM the normal to world-space, & re-normalize it.
+    vec4.transformMat4(
+        myHit.surfNorm,
+        vec4.fromValues(0, 0, 1, 0),
+        this.normal2world
+    );
+    vec4.normalize(myHit.surfNorm, myHit.surfNorm);
+
+    //-------------find hit-point color:----------------
+    var loc = myHit.modelHitPt[0] / this.xgap; // how many 'xgaps' from the origin?
+    if (myHit.modelHitPt[0] < 0) loc = -loc; // keep >0 to form double-width line at yaxis.
+    if (loc % 1 < this.lineWidth) {
+        // fractional part of loc < linewidth?
+        myHit.hitNum = 0; // YES. rayT hit a line of constant-x
+        // myHit.reflect(inRay); 
+        return;
+    }
+    loc = myHit.modelHitPt[1] / this.ygap; // how many 'ygaps' from origin?
+    if (myHit.modelHitPt[1] < 0) loc = -loc; // keep >0 to form double-width line at xaxis.
+    if (loc % 1 < this.lineWidth) {
+        // fractional part of loc < linewidth?
+        myHit.hitNum = 0; // YES. rayT hit a line of constant-y
+        // myHit.reflect(inRay); 
+        return;
+    }
+    myHit.reflect(inRay); 
+    myHit.hitNum = 1; // No.
+    return;
+};
+    
 
 // ! matrix transform ==========================================
 CGeom.prototype.setIdent = function () {

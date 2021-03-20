@@ -35,14 +35,6 @@ CScene.prototype.initScene = function (num) {
             this.item.push(new CGeom(RT_SPHERE));
             iNow = this.item.length - 1;
             this.item[iNow].setIdent();
-            this.item[iNow].rayScale(1.8, 1.8, 1.8);
-            this.item[iNow].rayTranslate(-0.5, 2, 2.0);
-            this.item[iNow].setMaterial(9);
-
-            // * sphere
-            this.item.push(new CGeom(RT_SPHERE));
-            iNow = this.item.length - 1;
-            this.item[iNow].setIdent();
             this.item[iNow].rayScale(1, 1, 1);
             this.item[iNow].rayTranslate(2, 1, 1.0);
             this.item[iNow].setMaterial(8);
@@ -53,7 +45,7 @@ CScene.prototype.initScene = function (num) {
             this.item[iNow].setIdent();
             this.item[iNow].rayScale(0.3, 1, 0.3);
             this.item[iNow].rayTranslate(4, 1, 3);
-            this.item[iNow].rayRotate(-0.8*Math.PI, 0,0,1);
+            this.item[iNow].rayRotate(-0.8 * Math.PI, 0, 0, 1);
             this.item[iNow].setMaterial(12);
 
             // * sphere
@@ -62,8 +54,38 @@ CScene.prototype.initScene = function (num) {
             this.item[iNow].setIdent();
             this.item[iNow].rayScale(0.5, 0.5, 2);
             this.item[iNow].rayTranslate(-5, 1.2, 1.0);
-            this.item[iNow].rayRotate(-0.8*Math.PI, 0,0,1);
+            this.item[iNow].rayRotate(-0.8 * Math.PI, 0, 0, 1);
             this.item[iNow].setMaterial(14);
+
+            // * disk
+            this.item.push(new CGeom(RT_DISK));
+            iNow = this.item.length - 1;
+            this.item[iNow].setIdent();
+            this.item[iNow].rayTranslate(0.2, 0.4, 0.0);
+            this.item[iNow].rayRotate(0.8 * Math.PI, 0, 1, 0);
+            this.item[iNow].rayScale(2, 1, 0.3);
+            this.item[iNow].setMaterial(2);
+
+            // * disk
+            this.item.push(new CGeom(RT_DISK));
+            iNow = this.item.length - 1;
+            this.item[iNow].setIdent();
+            this.item[iNow].rayRotate(0.8 * Math.PI, 1, 0, 0);
+            this.item[iNow].rayTranslate(0.2, 0.4, 0.0);
+            this.item[iNow].rayRotate(0.3 * Math.PI, 0, 0, 1);
+            this.item[iNow].rayScale(0.4, 1.2, 0.3);
+            this.item[iNow].setMaterial(2);
+
+            // * disk
+            this.item.push(new CGeom(RT_DISK));
+            iNow = this.item.length - 1;
+            this.item[iNow].setIdent();
+            this.item[iNow].rayRotate(0.8 * Math.PI, 1, 0, 0);
+            this.item[iNow].rayTranslate(0.2, 0.4, 0.0);
+            this.item[iNow].rayRotate(0.4 * Math.PI, 1, 0, 0);
+            this.item[iNow].rayScale(1, 0.3, 2.3);
+            this.item[iNow].setMaterial(1);
+
             break;
         case 1:
             this.item.push(new CGeom(RT_GNDPLANE)); // Append gnd-plane to item[] array
@@ -73,36 +95,115 @@ CScene.prototype.initScene = function (num) {
             this.item.push(new CGeom(RT_SPHERE));
             iNow = this.item.length - 1;
             this.item[iNow].setIdent();
-            this.item[iNow].rayScale(0.8, 0.8, 0.8);
+            this.item[iNow].rayScale(0.8, 0.6, 0.4);
             this.item[iNow].rayTranslate(0, -3.2, 1.0);
             this.item[iNow].setMaterial(12);
-   
+
+            // * sphere
+            this.item.push(new CGeom(RT_SPHERE));
+            iNow = this.item.length - 1;
+            this.item[iNow].setIdent();
+            this.item[iNow].rayScale(0.3, 3.3, 0.3);
+            this.item[iNow].rayTranslate(3, 1.2, 1.0);
+            this.item[iNow].setMaterial(6);
+
+            // * sphere
+            this.item.push(new CGeom(RT_SPHERE));
+            iNow = this.item.length - 1;
+            this.item[iNow].setIdent();
+            this.item[iNow].rayScale(0.1, 4.6, 0.4);
+            this.item[iNow].rayTranslate(0, 0.2, 0.0);
+            this.item[iNow].setMaterial(13);
+
             // * cube
             this.item.push(new CGeom(RT_BOX));
             iNow = this.item.length - 1;
             this.item[iNow].setIdent();
-            this.item[iNow].rayScale(1, 1, 1.3);
-            this.item[iNow].rayTranslate(1.2, 1.4, 1.0);
-            this.item[iNow].rayRotate(0.8*Math.PI, 0,0,1);
+            this.item[iNow].rayRotate(0.3 * Math.PI, 1, 0, 0);
+            this.item[iNow].rayScale(0.2, 0.3, 1.3);
+            this.item[iNow].rayTranslate(0.2, 0.2, 1.0);
+            this.item[iNow].rayRotate(-0.8 * Math.PI, 0, 0, 1);
+            this.item[iNow].rayRotate(-0.8 * Math.PI, 0, 1, 0);
             this.item[iNow].setMaterial(10);
 
             // * cube
-            this.item.push(new CGeom(RT_CYLINDER));
+            this.item.push(new CGeom(RT_BOX));
             iNow = this.item.length - 1;
             this.item[iNow].setIdent();
-            this.item[iNow].rayScale(0.8, 1, 1);
-            this.item[iNow].rayTranslate(-2, 1.4, 1.0);
-            this.item[iNow].rayRotate(-0.8*Math.PI, 0,0,1);
+            this.item[iNow].rayRotate(0.3 * Math.PI, 1, 0, 0);
+            this.item[iNow].rayScale(0.2, 0.3, 1.3);
+            this.item[iNow].rayTranslate(0.2, 1.2, 1.0);
+            this.item[iNow].rayRotate(-0.8 * Math.PI, 0, 0, 1);
+            this.item[iNow].rayRotate(-0.8 * Math.PI, 1, 0, 0);
+            this.item[iNow].setMaterial(10);
+
+            // * cube
+            this.item.push(new CGeom(RT_BOX));
+            iNow = this.item.length - 1;
+            this.item[iNow].setIdent();
+            this.item[iNow].rayRotate(0.8 * Math.PI, 0, 0, 1);
+            this.item[iNow].rayTranslate(0, 2.4, 1.0);
+            this.item[iNow].rayScale(0.8, 0.2, 1);
+            this.item[iNow].rayRotate(0.3 * Math.PI, 0, 0, 1);
             this.item[iNow].setMaterial(14);
 
             break;
         case 2:
-            console.log(
-                "JT_tracer0-Scene file: CScene.initScene(",
-                num,
-                ") NOT YET IMPLEMENTED."
-            );
-            this.initScene(0); // use default scene
+            this.item.push(new CGeom(RT_GNDPLANE)); // Append gnd-plane to item[] array
+            iNow = this.item.length - 1; // get its array index.
+            // * cube
+            this.item.push(new CGeom(RT_BOX));
+            iNow = this.item.length - 1;
+            this.item[iNow].setIdent();
+            this.item[iNow].rayRotate(0.8 * Math.PI, 0, 0, 1);
+            this.item[iNow].rayScale(1, 1, 0.3);
+            this.item[iNow].rayTranslate(1.2, 1.4, 1.0);
+            this.item[iNow].rayRotate(0.8 * Math.PI, 0, 0, 1);
+            this.item[iNow].setMaterial(18);
+
+            // * cube
+            this.item.push(new CGeom(RT_BOX));
+            iNow = this.item.length - 1;
+            this.item[iNow].setIdent();
+            this.item[iNow].rayRotate(0.8 * Math.PI, 0, 0, 1);
+            this.item[iNow].rayScale(1, 1, 0.3);
+            this.item[iNow].rayTranslate(1.2, 1.4, 1.3);
+            this.item[iNow].rayRotate(0.3 * Math.PI, 0, 1, 0);
+            this.item[iNow].setMaterial(18);
+
+            // * disk
+            this.item.push(new CGeom(RT_DISK));
+            iNow = this.item.length - 1;
+            this.item[iNow].setIdent();
+            this.item[iNow].rayRotate(0.8 * Math.PI, 1, 0, 0);
+            this.item[iNow].rayTranslate(1.2, 0.4, -3.0);
+            this.item[iNow].rayRotate(0.8 * Math.PI, 0, 0, 1);
+            this.item[iNow].rayScale(1, 1, 0.3);
+            this.item[iNow].setMaterial(19);
+
+            // * sphere
+            this.item.push(new CGeom(RT_SPHERE));
+            iNow = this.item.length - 1;
+            this.item[iNow].setIdent();
+            this.item[iNow].setMaterial(6);
+
+            // * sphere
+            this.item.push(new CGeom(RT_SPHERE));
+            iNow = this.item.length - 1;
+            this.item[iNow].setIdent();
+            this.item[iNow].rayTranslate(1.2, 1.4, 0.2);
+            this.item[iNow].rayRotate(0.8 * Math.PI, 0, 0, 1);
+            this.item[iNow].rayScale(0.3, 0.5, 0.3);
+            this.item[iNow].setMaterial(7);
+
+            // * sphere
+            this.item.push(new CGeom(RT_SPHERE));
+            iNow = this.item.length - 1;
+            this.item[iNow].setIdent();
+            this.item[iNow].rayTranslate(-1, 2.4, 1.0);
+            this.item[iNow].rayRotate(0.8 * Math.PI, 1, 0, 0);
+            this.item[iNow].rayScale(0.6, 1.2, 0.3);
+            this.item[iNow].setMaterial(8);
             break;
         default:
             console.log(
@@ -110,7 +211,8 @@ CScene.prototype.initScene = function (num) {
                 num,
                 ") NOT YET IMPLEMENTED."
             );
-            this.initScene(0); // init the default scene.
+            this.item.push(new CGeom(RT_GNDPLANE)); // Append gnd-plane to item[] array
+            iNow = this.item.length - 1; // get its array index.
             break;
     }
 };
@@ -412,7 +514,7 @@ Light.prototype.setDefaultLight = function () {
         params.Lamp2PosZ,
     ]);
     g_lamp1.I_ambi.elements.set([0.6, 0.6, 0.6]);
-    g_lamp1.I_diff.elements.set([0.6, 0.6, 0.6]);
+    g_lamp1.I_diff.elements.set([1.0, 1.0, 1.0]);
     g_lamp1.I_spec.elements.set([1.0, 1.0, 1.0]);
 };
 
