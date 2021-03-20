@@ -9,30 +9,29 @@ References: besides the inline links, the code is modified from
 /*
     Done: basic GUIbox
     Done: basic VBO box
-    Done: vbo box of line grid showing on screen
-    Done: 2 view ports and basic viewing control
-    Done: Ray-traced result that exactly matches the WebGL preview.
-    Done: camera setLookAt rayPerspective() and rayFrustum()
+    [15]Done: vbo box of line grid showing on screen
+    [5]Done: 2 view ports and basic viewing control
+    [5]Done: Ray-traced result that exactly matches the WebGL preview.
+    [5]Done: camera setLookAt rayPerspective() and rayFrustum()
     Done: Add a grid-plane-like flat disk and/or a sphere 
     Done: CGeom: rayLoadIdentity(), rayTranslate(), rayRotate(), rayScale(), worldRay2model transform matrix & squash a object
-    Done: user-adjustable antialiasing [7] #testing
-    Done: 2 more user-adjustable 3D light positions [10]
-    Done:  In ray-traced result, show at least 2 different Phong materials on different surfaces simultaneously.
-    Done: recursive mirror-like reflections and 
-    Done: adjustable depth 
-    Done: show 3 transformed sphere
-    Done: show webGL 2 phong materials [5]
-    Done: 3 or more transformed spheres [5]
-    Done: cube transform non-uniform shape distortion [5]
-    * Almost Done: 4 distinct 3d Scnenes [10]
-    => 80
+    [7]Done: user-adjustable antialiasing [7] #testing
+    [7]Done: 2 more user-adjustable 3D light positions [10]
+    [5]Done:  In ray-traced result, show at least 2 different Phong materials on different surfaces simultaneously.
+    [5]Done: recursive mirror-like reflections and 
+    [5]Done: adjustable depth 
+    [5]Done: show 3 transformed sphere
+    [5]Done: show webGL 2 phong materials [5]
+    [5]Done: 3 or more transformed spheres [5]
+    [10]Done: 4 distinct 3d Scnenes [10]
+    [10]Done: shadows
 
-    ? TODO overlapped shadows [7]
-    ? 3d 3D checkerboard [5]
-    
+    [5]Done: cube transform non-uniform shape distortion [5]
+    [5]stochastic shadow
+
+    ? 3d masterial [5]
 
     TODO More Geometric Shapes cylinder torus plus ray tracing [5 each]
-    TODO Soft Shadows [5]
     TODO Transparency with Refraction [10]
     TODO Non-Phong light/material [10 each]
     TODO Procedural Materials [5]
