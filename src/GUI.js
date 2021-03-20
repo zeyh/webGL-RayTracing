@@ -19,6 +19,9 @@ datgui.domElement.id = 'datgui';
 function setRecursionDepth(selection){
     g_recurDepth = selection.value;
 }
+function setShadowType(selection){
+    g_shadowType = selection.value;
+}
 function lightOn(idx){
     console.log(idx)
     if(idx == 1){

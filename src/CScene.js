@@ -348,6 +348,7 @@ function calDist(hits, i) {
     );
 }
 
+let g_shadowType = 0;
 CScene.prototype.getColor = function (hits, eyePos) {
     let color0 = vec4.create();
     let color1 = vec4.create();
@@ -362,19 +363,56 @@ CScene.prototype.getColor = function (hits, eyePos) {
     if(myHit.hitNum == -1){
         return;
     }
-    // !this.isShadow(myHit, WORLDLIGHT, hits)
+    let fallout = 8;
+
     if (g_headLightOn) {
         color0 = light0.getColor(myHit, eyePos);
         rcolor0 = this.getReflect(myHit, eyePos, light0);
         vec4.add(color0, color0, rcolor0);
-        // console.log(rcolor0)
-        // console.log(reak1)
+        let shadowI= this.isShadow(myHit, light0);
+        if(shadowI > 0){
+            if(g_shadowType == 2){
+                let randX = Math.random();
+                if(randX < shadowI/fallout){
+                    vec4.subtract(color0, color0, [shadowI/fallout,shadowI/fallout,shadowI/fallout]);
+                    vec4.normalize(color0, color0);
+                }
+            }
+            else if (g_shadowType == 1){
+                vec4.subtract(color0, color0, [shadowI/fallout,shadowI/fallout,shadowI/fallout]);
+                vec4.normalize(color0, color0);
+            }
+            else{
+                vec4.subtract(color0, color0, [0.4,0.4,0.4]);
+                vec4.normalize(color0, color0);
+            }
+        }
     }
-    if (g_worldLightOn) {
+    if ( g_worldLightOn) {
         color1 = light1.getColor(myHit, eyePos);
         rcolor1 = this.getReflect(myHit, eyePos, light1);
         vec4.add(color1, color1, rcolor1);
-    } else {
+        let shadowI= this.isShadow(myHit, light1);
+        if(shadowI > 0){
+            if(g_shadowType == 2){
+                let randX = Math.random();
+                if(randX < shadowI/fallout){
+                    vec4.subtract(color1, color1, [shadowI/fallout,shadowI/fallout,shadowI/fallout]);
+                    vec4.normalize(color1, color1);
+                }
+            }
+            else if (g_shadowType == 1){
+                vec4.subtract(color1, color1, [shadowI/fallout,shadowI/fallout,shadowI/fallout]);
+                vec4.normalize(color1, color1);
+            }
+            else{
+                vec4.subtract(color1, color1, [0.4,0.4,0.4]);
+                vec4.normalize(color1, color1);
+            }
+        }
+    } 
+    
+    else {
         color1 = vec4.fromValues(0, 0, 0, 1);
     }
     vec4.add(color1, color0, color1);
@@ -385,36 +423,25 @@ CScene.prototype.getColor = function (hits, eyePos) {
     return color1;
 };
 
-CScene.prototype.isShadow = function (myHit, lightIdx, hits) {
+CScene.prototype.isShadow = function (myHit, light) {
     let isInShadow = false;
-
-    //get a copy of current pos and light
-    let curLight = new Light(lightIdx);
-    let curLightPos = vec4.create();
-    vec4.copy(curLightPos, curLight.I_pos);
-
-    let curRay = vec4.create();
-    vec4.copy(curRay, myHit.hitPt);
-
+    let rRay = new CRay();
+    vec4.copy(rRay.orig, myHit.hitPt);
     let rayDir = vec4.create();
-    vec4.subtract(rayDir, curLightPos, curRay);
+    vec4.subtract(rayDir, light.I_pos, myHit.modelHitPt);
     vec4.normalize(rayDir, rayDir);
-
-    let curHitList = new CHitList(curRay);
-    for (k = 0; k < this.item.length; k++) {
-        // for every CGeom in item[] array,
-        let curHit = new CHit();
-        curHitList.hitList.push(curHit);
-        this.item[k].traceMe(this.eyeRay, curHit); // trace eyeRay thru it,
-    }
+    vec4.copy(rRay.dir, rayDir);
+    let curHitList = this.traceGeom(rRay, myHit);
 
     for (var i = 0; i < curHitList.hitList.length; i++) {
-        if (curHitList.hitList[i].hitGeom.shapeType != myHit.hitGeom.shapeType
-            && curHitList.hitList[i].t0 < (curLightPos[0] - myHit.modelHitPt[0]) / rayDir[0]) {
+        let p1 = curHitList.hitList[i].t0;
+        let p2 = (light.I_pos[0] - myHit.modelHitPt[0]) / rayDir[0];
+        if (p1 < p2) {
             isInShadow = true;
+            return (p2 - p1)/p1 ;
         }
     }
-    return isInShadow;
+    return 0;
 };
 
 CScene.prototype.getReflect = function (myHit, eyePos, curLight) {
@@ -576,7 +603,7 @@ Light.prototype.setDefaultLight = function () {
         params.Lamp2PosY,
         params.Lamp2PosZ,
     ]);
-    g_lamp1.I_ambi.elements.set([0.6, 0.6, 0.6]);
+    g_lamp1.I_ambi.elements.set([1.0, 1.0, 1.0]);
     g_lamp1.I_diff.elements.set([1.0, 1.0, 1.0]);
     g_lamp1.I_spec.elements.set([1.0, 1.0, 1.0]);
 };
