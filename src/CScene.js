@@ -524,24 +524,25 @@ function Light(idx) {
     this.setDefaultMat();
     this.matl;
 }
-
-Light.prototype.getColor = function (myHit, eyePos) {
+var g_patternType = 0;
+Light.prototype.getColor = function (myHit) {
     this.setDefaultMat(myHit.hitGeom.matl);
     if(myHit.hitNum == -1){
         return
     }
-    let mat = myHit.hitGeom.matl;
+    // let mat = myHit.hitGeom.matl;
+    this.addPattern(g_patternType, myHit); //TODO: 
     //emissive
-    let color = vec4.clone(mat.K_emit);
+    let color = vec4.clone(this.Ke);
     
     //ambient
     let ambient = vec4.create();
-    vec4.multiply(ambient, this.I_ambi, mat.K_ambi);
+    vec4.multiply(ambient, this.I_ambi, this.Ka);
     vec4.add(color, color, ambient);
 
     //diffse
     let diffuse = vec4.clone(this.I_diff);
-    vec4.multiply(diffuse, diffuse, mat.K_diff);
+    vec4.multiply(diffuse, diffuse, this.Kd);
 
     let lightDirection = vec4.create();
     vec4.subtract(lightDirection, this.I_pos, myHit.hitPt);
@@ -553,13 +554,13 @@ Light.prototype.getColor = function (myHit, eyePos) {
 
     //specular
     let speculr = vec4.clone(this.I_spec);
-    vec4.multiply(speculr, speculr, mat.K_spec);
+    vec4.multiply(speculr, speculr, this.Ks);
 
     let H = vec4.create();
     vec4.add(H, lightDirection, myHit.viewN);
     vec4.normalize(H,H);
     let nDotH = Math.max(vec4.dot(H, myHit.surfNorm), 0.0);
-    let e64 = Math.pow(nDotH, mat.K_shiny);
+    let e64 = Math.pow(nDotH, this.KShiny);
     vec4.scale(speculr, speculr, e64);
 
     vec4.add(color, color, speculr);
@@ -608,11 +609,13 @@ Light.prototype.setDefaultLight = function () {
     g_lamp1.I_spec.elements.set([1.0, 1.0, 1.0]);
 };
 
-Light.prototype.setDefaultMat = function (matl) {
+Light.prototype.setDefaultMat = function (matl, isGap) {
     if(matl == null){
         matl = g_matl0;
     }
-    this.matl = matl;
+    if(!isGap){
+        this.matl = matl;
+    }
     this.Ka = vec4.fromValues(
         matl.K_ambi[0],
         matl.K_ambi[1],
@@ -639,3 +642,54 @@ Light.prototype.setDefaultMat = function (matl) {
     );
     this.KShiny = matl.K_shiny;
 };
+Light.prototype.addPattern = function(pattern, myHit){
+    if(pattern == 1){
+        let gapMat = new Material();
+        gapMat.setMatl(1);
+        if(myHit.hitGeom.shapeType == RT_SPHERE && myHit.modelHitPt[0]*myHit.modelHitPt[0] + myHit.modelHitPt[1]*myHit.modelHitPt[1]
+            + myHit.modelHitPt[2]*myHit.modelHitPt[2] < 1){
+                this.setDefaultMat(gapMat, true)
+        }
+    }
+    if(pattern == 2){
+        let gapMat = new Material();
+        gapMat.setMatl(1);
+        if(myHit.hitGeom.shapeType == RT_SPHERE && Math.floor(myHit.modelHitPt[0] + myHit.modelHitPt[1] + myHit.modelHitPt[2]) % 7 != 0 || Math.floor(myHit.modelHitPt[0] + myHit.modelHitPt[1] + myHit.modelHitPt[2]) % 3 != 0){
+            this.setDefaultMat(gapMat, true)
+        }
+    }
+    if(pattern == 3){
+        let gapMat = new Material();
+        gapMat.setMatl(7);
+        if(Math.floor(Math.sin(myHit.modelHitPt[0]* myHit.modelHitPt[1])*10) % 5 == 0){
+            this.setDefaultMat(gapMat, true)
+        }
+    }
+    if(pattern == 4){
+        let color = fractals(myHit.modelHitPt[0], myHit.modelHitPt[1]);
+        vec3.normalize(color, color);
+        this.Kd = vec4.fromValues(
+            color[0],
+            color[1],
+            0.5,
+            0.1
+        );
+    }
+}
+
+function fractals(zx, zy) {
+    let x = 3;
+    let y = 3;
+    var cx = -.68 + x / 1200;
+    var cy = -.75 + y / 1200;
+    var zx = Math.abs(Math.floor(zx));
+    var zy =  Math.abs(Math.floor(zy));
+    let i = 0;
+    while (i<2 && zx * zx + zy * zy < 4){
+        var xt = zx * zy;
+        zx = zx * zx - zy * zy + cx;
+        zy = 2 * xt + cy;
+        i++;
+    }
+    return [zx, zy, zy];
+}
