@@ -1,6 +1,5 @@
-
-/** 
- * change viewing point 
+/**
+ * change viewing point
  */
 function CCamera() {
     this.eyePt = vec4.fromValues(0, 0, 0, 1);
@@ -8,13 +7,13 @@ function CCamera() {
     this.uAxis = vec4.fromValues(1, 0, 0, 0); // camera U axis == world x axis
     this.vAxis = vec4.fromValues(0, 1, 0, 0); // camera V axis == world y axis
     this.nAxis = vec4.fromValues(0, 0, 1, 0); // camera N axis == world z axis.
-  
+
     this.iLeft = -1.0;
     this.iRight = 1.0;
     this.iBot = -1.0;
     this.iTop = 1.0;
     this.iNear = 1.0;
-    
+
     this.xmax = 256; // horizontal,
     this.ymax = 256; // vertical image resolution.
 
@@ -30,8 +29,8 @@ CCamera.prototype.setSize = function (nuXmax, nuYmax) {
     this.vfrac = (this.iTop - this.iBot) / this.ymax; // pixel tile's height.
 };
 
-/** 
- * set rayFrustrum 
+/**
+ * set rayFrustrum
  */
 CCamera.prototype.rayFrustum = function (left, right, bot, top, near) {
     this.iLeft = left;
@@ -41,7 +40,7 @@ CCamera.prototype.rayFrustum = function (left, right, bot, top, near) {
     this.iNear = near;
 };
 
-CCamera.prototype.rayPerspective = function(fovy, aspect, zNear) {
+CCamera.prototype.rayPerspective = function (fovy, aspect, zNear) {
     //==============================================================================
     // Set the camera's viewing frustum with the same arguments used by the OpenGL
     // 'gluPerspective()' function
@@ -49,15 +48,15 @@ CCamera.prototype.rayPerspective = function(fovy, aspect, zNear) {
     //  fovy == vertical field-of-view (bottom-to-top) in degrees
     //  aspect ratio == camera image width/height
     //  zNear == distance from COP to the image-forming plane. zNear MUST be >0.
-    
+
     //  console.log("you called CCamera.rayPerspective");
-      this.iNear = zNear;
-      this.iTop = zNear * Math.tan(0.5*fovy*(Math.PI/180.0)); // tan(radians)
-      // right triangle:  iTop/zNear = sin(fovy/2) / cos(fovy/2) == tan(fovy/2)
-      this.iBot = -this.iTop;
-      this.iRight = this.iTop*aspect;
-      this.iLeft = -this.iRight;
-    }
+    this.iNear = zNear;
+    this.iTop = zNear * Math.tan(0.5 * fovy * (Math.PI / 180.0)); // tan(radians)
+    // right triangle:  iTop/zNear = sin(fovy/2) / cos(fovy/2) == tan(fovy/2)
+    this.iBot = -this.iTop;
+    this.iRight = this.iTop * aspect;
+    this.iLeft = -this.iRight;
+};
 
 CCamera.prototype.rayLookAt = function (nuEyePt, nuAimPt, nuUpVec) {
     //==============================================================================
@@ -76,9 +75,9 @@ CCamera.prototype.rayLookAt = function (nuEyePt, nuAimPt, nuUpVec) {
     vec4.normalize(this.uAxis, this.uAxis); // make it unit-length.
     vec3.cross(this.vAxis, this.nAxis, this.uAxis); // V-axis == N-axis cross U-axis
 };
-    
-/** 
- * specify a ray in world coordinates that originates at the camera's eyepoint 
+
+/**
+ * specify a ray in world coordinates that originates at the camera's eyepoint
  */
 CCamera.prototype.setEyeRay = function (myeRay, xpos, ypos) {
     var posU = this.iLeft + xpos * this.ufrac; // U coord,
@@ -97,5 +96,5 @@ CCamera.prototype.setEyeRay = function (myeRay, xpos, ypos) {
  * print CCamera object's current contents in console window:
  */
 CCamera.prototype.printMe = function () {
-    console.log("cccamera", this); 
+    console.log("cccamera", this);
 };

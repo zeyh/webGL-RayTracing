@@ -76,7 +76,7 @@ var boxFrag1 =
     "void main() {\n" +
     "  gl_FragColor = texture2D(u_Sampler, v_TexCoord);\n" +
     "}\n";
-    var PhongPhongVert =
+var PhongPhongVert =
     "struct MatlT {\n" +
     "		vec3 emit;\n" + // Ke: emissive -- surface 'glow' amount (r,g,b);
     "		vec3 ambi;\n" + // Ka: ambient reflectance (r,g,b)
@@ -91,12 +91,10 @@ var boxFrag1 =
     "uniform mat4 u_MvpMatrix; \n" +
     "uniform mat4 u_ModelMatrix; \n" +
     "uniform mat4 u_NormalMatrix; \n" +
-
     //-------------VARYING:Vertex Shader values sent per-pixel to Fragment shader:
     "varying vec3 v_Kd; \n" + // Phong Lighting: diffuse reflectance
     "varying vec4 v_Position; \n" +
     "varying vec3 v_Normal; \n" + // Why Vec3? its not a point, hence w==0
-
     "void main() { \n" +
     "  gl_Position = u_MvpMatrix * a_Position;\n" +
     "  v_Position = u_ModelMatrix * a_Position; \n" +
@@ -105,52 +103,46 @@ var boxFrag1 =
     "}\n";
 
 var PhongPhongFrag =
-    'precision highp float;\n' +
-    'precision highp int;\n' +
-
+    "precision highp float;\n" +
+    "precision highp int;\n" +
     //--------------- GLSL Struct Definitions:
-    'struct LampT {\n' +		// Describes one point-like Phong light source
-    '	vec3 pos;\n' +			// (x,y,z,w); w==1.0 for local light at x,y,z position
-    ' 	vec3 ambi;\n' +			// Ia ==  ambient light source strength (r,g,b)
-    ' 	vec3 diff;\n' +			// Id ==  diffuse light source strength (r,g,b)
-    '	vec3 spec;\n' +			// Is == specular light source strength (r,g,b)
-    '}; \n' +
-
-    'struct MatlT {\n' +		// Describes one Phong material by its reflectances:
-    '		vec3 emit;\n' +			// Ke: emissive -- surface 'glow' amount (r,g,b);
-    '		vec3 ambi;\n' +			// Ka: ambient reflectance (r,g,b)
-    '		vec3 diff;\n' +			// Kd: diffuse reflectance (r,g,b)
-    '		vec3 spec;\n' + 		// Ks: specular reflectance (r,g,b)
-    '		int shiny;\n' +			// Kshiny: specular exponent (integer >= 1; typ. <200)
-    '		};\n' +
-
+    "struct LampT {\n" + // Describes one point-like Phong light source
+    "	vec3 pos;\n" + // (x,y,z,w); w==1.0 for local light at x,y,z position
+    " 	vec3 ambi;\n" + // Ia ==  ambient light source strength (r,g,b)
+    " 	vec3 diff;\n" + // Id ==  diffuse light source strength (r,g,b)
+    "	vec3 spec;\n" + // Is == specular light source strength (r,g,b)
+    "}; \n" +
+    "struct MatlT {\n" + // Describes one Phong material by its reflectances:
+    "		vec3 emit;\n" + // Ke: emissive -- surface 'glow' amount (r,g,b);
+    "		vec3 ambi;\n" + // Ka: ambient reflectance (r,g,b)
+    "		vec3 diff;\n" + // Kd: diffuse reflectance (r,g,b)
+    "		vec3 spec;\n" + // Ks: specular reflectance (r,g,b)
+    "		int shiny;\n" + // Kshiny: specular exponent (integer >= 1; typ. <200)
+    "		};\n" +
     //-------------UNIFORMS: values set from JavaScript before a drawing command.
-    'uniform LampT u_LampSet[1];\n' +		// Array of all light sources.
-    'uniform MatlT u_MatlSet[1];\n' +		// Array of all materials.
-    'uniform vec3 u_eyePosWorld; \n' + 	// Camera/eye location in world coords.
-
-    //-------------VARYING:Vertex Shader values sent per-pixel to Fragment shader: 
-    'varying vec3 v_Normal;\n' +				// Find 3D surface normal at each pix
-    'varying vec4 v_Position;\n' +			// pixel's 3D pos too -- in 'world' coords
-    'varying vec3 v_Kd;	\n' +						// Find diffuse reflectance K_d per pix
-
-    'void main() { \n' +
-    '  vec3 normal = normalize(v_Normal); \n' +
-    '  vec3 lightDirection = normalize(u_LampSet[0].pos - v_Position.xyz);\n' +
-    '  vec3 eyeDirection = normalize(u_eyePosWorld - v_Position.xyz); \n' +
-    '  float nDotL = max(dot(lightDirection, normal), 0.0); \n' +
-
+    "uniform LampT u_LampSet[1];\n" + // Array of all light sources.
+    "uniform MatlT u_MatlSet[1];\n" + // Array of all materials.
+    "uniform vec3 u_eyePosWorld; \n" + // Camera/eye location in world coords.
+    //-------------VARYING:Vertex Shader values sent per-pixel to Fragment shader:
+    "varying vec3 v_Normal;\n" + // Find 3D surface normal at each pix
+    "varying vec4 v_Position;\n" + // pixel's 3D pos too -- in 'world' coords
+    "varying vec3 v_Kd;	\n" + // Find diffuse reflectance K_d per pix
+    "void main() { \n" +
+    "  vec3 normal = normalize(v_Normal); \n" +
+    "  vec3 lightDirection = normalize(u_LampSet[0].pos - v_Position.xyz);\n" +
+    "  vec3 eyeDirection = normalize(u_eyePosWorld - v_Position.xyz); \n" +
+    "  float nDotL = max(dot(lightDirection, normal), 0.0); \n" +
     // ? vvvvvvvvvvvvvvvvvvvvvvvv
-    '  vec3 reflec = normalize(2.0*(normal * nDotL) - lightDirection); \n' + // ? phong no half
-    '  float rDotV = max(dot(reflec, eyeDirection), 0.0); \n' +
-    '  float e64 = pow(rDotV, float(u_MatlSet[0].shiny));\n' + // pow() won't accept integer exponents! Convert K_shiny!  
+    "  vec3 reflec = normalize(2.0*(normal * nDotL) - lightDirection); \n" + // ? phong no half
+    "  float rDotV = max(dot(reflec, eyeDirection), 0.0); \n" +
+    "  float e64 = pow(rDotV, float(u_MatlSet[0].shiny));\n" + // pow() won't accept integer exponents! Convert K_shiny!
     // ? ^^^^^^^^^^^^^^^^^^^^^^^^
-    '  vec3 emissive = u_MatlSet[0].emit;' +
-    '  vec3 ambient = u_LampSet[0].ambi * u_MatlSet[0].ambi;\n' +
-    '  vec3 diffuse = u_LampSet[0].diff * v_Kd * nDotL;\n' +
-    '  vec3 speculr = u_LampSet[0].spec * u_MatlSet[0].spec * e64;\n' +
-    '  gl_FragColor = vec4(emissive + ambient + diffuse + speculr , 1.0);\n' +
-    '}\n';
+    "  vec3 emissive = u_MatlSet[0].emit;" +
+    "  vec3 ambient = u_LampSet[0].ambi * u_MatlSet[0].ambi;\n" +
+    "  vec3 diffuse = u_LampSet[0].diff * v_Kd * nDotL;\n" +
+    "  vec3 speculr = u_LampSet[0].spec * u_MatlSet[0].spec * e64;\n" +
+    "  gl_FragColor = vec4(emissive + ambient + diffuse + speculr , 1.0);\n" +
+    "}\n";
 
 /* the different shaders details */
 var draggableBlinnPhongVert =
@@ -168,12 +160,10 @@ var draggableBlinnPhongVert =
     "uniform mat4 u_MvpMatrix; \n" +
     "uniform mat4 u_ModelMatrix; \n" +
     "uniform mat4 u_NormalMatrix; \n" +
-
     //-------------VARYING:Vertex Shader values sent per-pixel to Fragment shader:
     "varying vec3 v_Kd; \n" + // Phong Lighting: diffuse reflectance
     "varying vec4 v_Position; \n" +
     "varying vec3 v_Normal; \n" + // Why Vec3? its not a point, hence w==0
-
     "void main() { \n" +
     "  gl_Position = u_MvpMatrix * a_Position;\n" +
     "  v_Position = u_ModelMatrix * a_Position; \n" +
@@ -181,67 +171,59 @@ var draggableBlinnPhongVert =
     "  v_Kd = u_MatlSet[0].diff; \n" + // find per-pixel diffuse reflectance from per-vertex
     "}\n";
 
-var draggableBlinnPhongFrag =  // ! Todo: add second head light
-    'precision highp float;\n' +
-    'precision highp int;\n' +
-
+var draggableBlinnPhongFrag = // ! Todo: add second head light
+    "precision highp float;\n" +
+    "precision highp int;\n" +
     //--------------- GLSL Struct Definitions:
-    'struct LampT {\n' +		// Describes one point-like Phong light source
-    '	vec3 pos;\n' +			// (x,y,z,w); w==1.0 for local light at x,y,z position
-    ' 	vec3 ambi;\n' +			// Ia ==  ambient light source strength (r,g,b)
-    ' 	vec3 diff;\n' +			// Id ==  diffuse light source strength (r,g,b)
-    '	vec3 spec;\n' +			// Is == specular light source strength (r,g,b)
-    '}; \n' +
-
-    'struct MatlT {\n' +		// Describes one Phong material by its reflectances:
-    '		vec3 emit;\n' +			// Ke: emissive -- surface 'glow' amount (r,g,b);
-    '		vec3 ambi;\n' +			// Ka: ambient reflectance (r,g,b)
-    '		vec3 diff;\n' +			// Kd: diffuse reflectance (r,g,b)
-    '		vec3 spec;\n' + 		// Ks: specular reflectance (r,g,b)
-    '		int shiny;\n' +			// Kshiny: specular exponent (integer >= 1; typ. <200)
-    '		};\n' +
-
+    "struct LampT {\n" + // Describes one point-like Phong light source
+    "	vec3 pos;\n" + // (x,y,z,w); w==1.0 for local light at x,y,z position
+    " 	vec3 ambi;\n" + // Ia ==  ambient light source strength (r,g,b)
+    " 	vec3 diff;\n" + // Id ==  diffuse light source strength (r,g,b)
+    "	vec3 spec;\n" + // Is == specular light source strength (r,g,b)
+    "}; \n" +
+    "struct MatlT {\n" + // Describes one Phong material by its reflectances:
+    "		vec3 emit;\n" + // Ke: emissive -- surface 'glow' amount (r,g,b);
+    "		vec3 ambi;\n" + // Ka: ambient reflectance (r,g,b)
+    "		vec3 diff;\n" + // Kd: diffuse reflectance (r,g,b)
+    "		vec3 spec;\n" + // Ks: specular reflectance (r,g,b)
+    "		int shiny;\n" + // Kshiny: specular exponent (integer >= 1; typ. <200)
+    "		};\n" +
     //-------------UNIFORMS: values set from JavaScript before a drawing command.
-    'uniform LampT u_LampSet[2];\n' +		// Array of all light sources.
-    'uniform MatlT u_MatlSet[1];\n' +		// Array of all materials.
-    'uniform vec3 u_eyePosWorld; \n' + 	// Camera/eye location in world coords.
-
-    //-------------VARYING:Vertex Shader values sent per-pixel to Fragment shader: 
-    'varying vec3 v_Normal;\n' +			// Find 3D surface normal at each pix
-    'varying vec4 v_Position;\n' +			// pixel's 3D pos too -- in 'world' coords
-    'varying vec3 v_Kd;	\n' +			    // Find diffuse reflectance K_d per pix
-
-    'void main() { \n' +
-    '  vec3 normal = normalize(v_Normal); \n' +
-    '  vec3 eyeDirection = normalize(u_eyePosWorld - v_Position.xyz); \n' +
-
+    "uniform LampT u_LampSet[2];\n" + // Array of all light sources.
+    "uniform MatlT u_MatlSet[1];\n" + // Array of all materials.
+    "uniform vec3 u_eyePosWorld; \n" + // Camera/eye location in world coords.
+    //-------------VARYING:Vertex Shader values sent per-pixel to Fragment shader:
+    "varying vec3 v_Normal;\n" + // Find 3D surface normal at each pix
+    "varying vec4 v_Position;\n" + // pixel's 3D pos too -- in 'world' coords
+    "varying vec3 v_Kd;	\n" + // Find diffuse reflectance K_d per pix
+    "void main() { \n" +
+    "  vec3 normal = normalize(v_Normal); \n" +
+    "  vec3 eyeDirection = normalize(u_eyePosWorld - v_Position.xyz); \n" +
     // Light Source 1
-    '  vec3 lightDirection = normalize(u_LampSet[0].pos - v_Position.xyz);\n' +
-    '  float nDotL = max(dot(lightDirection, normal), 0.0); \n' +
+    "  vec3 lightDirection = normalize(u_LampSet[0].pos - v_Position.xyz);\n" +
+    "  float nDotL = max(dot(lightDirection, normal), 0.0); \n" +
     // ? vvvvvvvvvvvvvvvvvvvvvvvv
-    '  vec3 H = normalize(lightDirection + eyeDirection); \n' +
-    '  float nDotH = max(dot(H, normal), 0.0); \n' +
-    '  float e64 = pow(nDotH, float(u_MatlSet[0].shiny));\n' + // pow() won't accept integer exponents! Convert K_shiny!  
+    "  vec3 H = normalize(lightDirection + eyeDirection); \n" +
+    "  float nDotH = max(dot(H, normal), 0.0); \n" +
+    "  float e64 = pow(nDotH, float(u_MatlSet[0].shiny));\n" + // pow() won't accept integer exponents! Convert K_shiny!
     // ? ^^^^^^^^^^^^^^^^^^^^^^^^
-    '  vec3 emissive = u_MatlSet[0].emit;' +
-    '  vec3 ambient = u_LampSet[0].ambi * u_MatlSet[0].ambi;\n' +
-    '  vec3 diffuse = u_LampSet[0].diff * v_Kd * nDotL;\n' +
-    '  vec3 speculr = u_LampSet[0].spec * u_MatlSet[0].spec * e64;\n' +
-
+    "  vec3 emissive = u_MatlSet[0].emit;" +
+    "  vec3 ambient = u_LampSet[0].ambi * u_MatlSet[0].ambi;\n" +
+    "  vec3 diffuse = u_LampSet[0].diff * v_Kd * nDotL;\n" +
+    "  vec3 speculr = u_LampSet[0].spec * u_MatlSet[0].spec * e64;\n" +
     //Light Source 2 (headlight)
-    '  vec3 lightDirection2 = normalize(u_LampSet[1].pos - v_Position.xyz);\n' +
-    '  float nDotL2 = max(dot(lightDirection2, normal), 0.0); \n' +
+    "  vec3 lightDirection2 = normalize(u_LampSet[1].pos - v_Position.xyz);\n" +
+    "  float nDotL2 = max(dot(lightDirection2, normal), 0.0); \n" +
     // ? vvvvvvvvvvvvvvvvvvvvvvvv
-    '  vec3 H2 = normalize(lightDirection2 + eyeDirection); \n' +
-    '  float nDotH2 = max(dot(H2, normal), 0.0); \n' +
-    '  float e64_2 = pow(nDotH2, float(u_MatlSet[0].shiny));\n' + // pow() won't accept integer exponents! Convert K_shiny!  
+    "  vec3 H2 = normalize(lightDirection2 + eyeDirection); \n" +
+    "  float nDotH2 = max(dot(H2, normal), 0.0); \n" +
+    "  float e64_2 = pow(nDotH2, float(u_MatlSet[0].shiny));\n" + // pow() won't accept integer exponents! Convert K_shiny!
     // ? ^^^^^^^^^^^^^^^^^^^^^^^^
-    '  vec3 ambient2 = u_LampSet[1].ambi * u_MatlSet[0].ambi;\n' +
-    '  vec3 diffuse2 = u_LampSet[1].diff * v_Kd * nDotL2;\n' +
-    '  vec3 speculr2 = u_LampSet[1].spec * u_MatlSet[0].spec * e64_2;\n' +
-
-    '  gl_FragColor = vec4(emissive + ambient + diffuse + speculr + ambient2 + diffuse2 + speculr2 , 1.0);\n' +
-    '}\n';
+    "  vec3 ambient2 = u_LampSet[1].ambi * u_MatlSet[0].ambi;\n" +
+    "  vec3 diffuse2 = u_LampSet[1].diff * v_Kd * nDotL2;\n" +
+    "  vec3 speculr2 = u_LampSet[1].spec * u_MatlSet[0].spec * e64_2;\n" +
+    "  gl_FragColor = vec4(emissive + ambient + diffuse + speculr + ambient2 + diffuse2 + speculr2 , 1.0);\n" +
+    "}\n";
 var diffuseVert = // * not used but could be used with lightSpec 0
     "precision highp float;\n" +
     "attribute vec4 a_Position;\n" +
@@ -269,9 +251,6 @@ var diffuseFrag = // * not used but could be used with lightSpec 0
     "  gl_FragColor = v_Color;\n" +
     "}\n";
 
-
-
-
 var gl;
 var g_canvasID;
 
@@ -281,9 +260,9 @@ var gui = new GUIbox(g_modelMatrix, g_viewProjMatrix);
 
 setControlPanel(g_modelMatrix, g_viewProjMatrix);
 
-
 var g_vboArray;
-var g_shadingScheme = { //[plane, cube, cube2, sphere, sphere2, cube3] 
+var g_shadingScheme = {
+    //[plane, cube, cube2, sphere, sphere2, cube3]
     0: [PhongPhongVert, PhongPhongFrag, 5],
     1: [draggableBlinnPhongVert, draggableBlinnPhongFrag, 3],
 };
@@ -291,23 +270,75 @@ function initVBOs(currScheme) {
     if (!currScheme) {
         currScheme = g_shadingScheme[0];
     }
-    var grid = new VBO_genetic(diffuseVert, diffuseFrag, grid_vertices, grid_colors, grid_normals, null, 0);
+    var grid = new VBO_genetic(
+        diffuseVert,
+        diffuseFrag,
+        grid_vertices,
+        grid_colors,
+        grid_normals,
+        null,
+        0
+    );
     grid.init();
-    var plane = new VBO_genetic(currScheme[0], currScheme[1], plane_vertices, plane_colors, plane_normals, plane_indices, currScheme[2], 8);
+    var plane = new VBO_genetic(
+        currScheme[0],
+        currScheme[1],
+        plane_vertices,
+        plane_colors,
+        plane_normals,
+        plane_indices,
+        currScheme[2],
+        8
+    );
     plane.init();
-    var sphere = new VBO_genetic(currScheme[0], currScheme[1], sphere_vertices, sphere_colors, sphere_normals, sphere_indices, currScheme[2], 10);
+    var sphere = new VBO_genetic(
+        currScheme[0],
+        currScheme[1],
+        sphere_vertices,
+        sphere_colors,
+        sphere_normals,
+        sphere_indices,
+        currScheme[2],
+        10
+    );
     sphere.init();
-    var sphere_test = new VBO_genetic(currScheme[0], currScheme[1], sphere_vertices, sphere_colors, sphere_normals, sphere_indices, currScheme[2], 6);
+    var sphere_test = new VBO_genetic(
+        currScheme[0],
+        currScheme[1],
+        sphere_vertices,
+        sphere_colors,
+        sphere_normals,
+        sphere_indices,
+        currScheme[2],
+        6
+    );
     sphere_test.init();
-    var cube = new VBO_genetic(currScheme[0], currScheme[1], cube_vertices, cube_colors, cube_normals, cube_indices, currScheme[2], 11);
+    var cube = new VBO_genetic(
+        currScheme[0],
+        currScheme[1],
+        cube_vertices,
+        cube_colors,
+        cube_normals,
+        cube_indices,
+        currScheme[2],
+        11
+    );
     cube.init();
-    var disk = new VBO_genetic(diffuseVert, diffuseFrag, diskVert, diskVert, diskVert, null, 0);
+    var disk = new VBO_genetic(
+        diffuseVert,
+        diffuseFrag,
+        diskVert,
+        diskVert,
+        diskVert,
+        null,
+        0
+    );
     disk.init();
     g_vboArray = [grid, plane, sphere_test, sphere, cube, disk];
 }
 
 // ! Ray Tracer Objects
-var g_myPic = new CImgBuf(256,256); // Create a floating-point image-buffer object to hold the image created by 'g_myScene' object.
+var g_myPic = new CImgBuf(256, 256); // Create a floating-point image-buffer object to hold the image created by 'g_myScene' object.
 // CAUTION! use power-of-two size (256x256; 512x512, etc)
 // to ensure WebGL 1.0 texture-mapping works properly
 var g_myScene = new CScene(); // Create our ray-tracing object;
@@ -320,7 +351,6 @@ var g_AAcode = 1; // Antialiasing setting: 1 == NO antialiasing at all. 2,3,4...
 var G_AA_MAX = 4; // highest super-sampling number allowed.
 var g_isJitter = 0; // ==1 for jitter, ==0 for no jitter.
 var g_lastMS = Date.now();
-
 
 var preView = new VBObox0(boxVert0, boxFrag0, axis_vboArr0, 6);
 var rayView = new VBObox1(boxVert1, boxFrag1, axis_vboArr1, 4);
@@ -338,10 +368,9 @@ function main() {
     gui.init();
     g_myScene.initScene(g_SceneNum);
     g_myScene.makeRayTracedImage();
-    
+
     preView.init(gl); // VBO + shaders + uniforms + attribs for WebGL preview
     rayView.init(gl); //  "		"		" to display ray-traced on-screen result.
-
 
     initVBOs(g_shadingScheme[1]);
 
@@ -354,7 +383,6 @@ function main() {
     drawAll(g_SceneNum, g_modelMatrix, g_viewProjMatrix); // re-draw BOTH viewports.
 
     onBrowserResize(g_SceneNum, g_modelMatrix, g_viewProjMatrix);
-
 }
 
 function onSceneButton() {
@@ -371,7 +399,7 @@ function onSceneButton() {
     // ! transfer g_myPic's new contents to the GPU;
     rayView.switchToMe(); // be sure OUR VBO & shaders are in use, then
     rayView.reload(); // re-transfer VBO contents and texture-map contents
-    drawAll(g_SceneNum,  g_modelMatrix, g_viewProjMatrix);
+    drawAll(g_SceneNum, g_modelMatrix, g_viewProjMatrix);
 }
 
 /**
@@ -422,8 +450,7 @@ function drawAll(g_SceneNum, g_modelMatrix, g_viewProjMatrix) {
     rayView.draw();
 }
 
-
-function drawPreview(g_modelMatrix, g_viewProjMatrix){
+function drawPreview(g_modelMatrix, g_viewProjMatrix) {
     switch (g_SceneNum) {
         case 0:
             //draw grid
@@ -989,36 +1016,33 @@ function test_glMatrix() {
 function onSuperSampleButton() {
     //=============================================================================
     // advance to the next antialiasing mode.
-        //console.log('ON-SuperSample BUTTON!');
-      g_AAcode += 1;
-      if(g_AAcode > G_AA_MAX) g_AAcode = 1; // 1,2,3,4, 1,2,3,4, 1,2,... etc
-      // report it:
-      if(g_AAcode==1) {
-        if(g_isJitter==0) {
-              document.getElementById('AAreport').innerHTML = 
-              "1 sample/pixel. No jitter.";
-          console.log("1 sample/pixel. No Jitter.");
-        } 
-        else {
-              document.getElementById('AAreport').innerHTML = 
-              "1 sample/pixel, but jittered.";
-          console.log("1 sample/pixel, but jittered.")
-        } 
-      }
-      else { // g_AAcode !=1
-        if(g_isJitter==0) {
-              document.getElementById('AAreport').innerHTML = 
-              g_AAcode+"x"+g_AAcode+" Supersampling. No jitter.";
-          console.log(g_AAcode,"x",g_AAcode,"Supersampling. No Jitter.");
-        } 
-        else {
-              document.getElementById('AAreport').innerHTML = 
-              g_AAcode+"x"+g_AAcode+" JITTERED Supersampling";
-          console.log(g_AAcode,"x",g_AAcode," JITTERED Supersampling.");
+    //console.log('ON-SuperSample BUTTON!');
+    g_AAcode += 1;
+    if (g_AAcode > G_AA_MAX) g_AAcode = 1; // 1,2,3,4, 1,2,3,4, 1,2,... etc
+    // report it:
+    if (g_AAcode == 1) {
+        if (g_isJitter == 0) {
+            document.getElementById("AAreport").innerHTML =
+                "1 sample/pixel. No jitter.";
+            console.log("1 sample/pixel. No Jitter.");
+        } else {
+            document.getElementById("AAreport").innerHTML =
+                "1 sample/pixel, but jittered.";
+            console.log("1 sample/pixel, but jittered.");
         }
-      }
+    } else {
+        // g_AAcode !=1
+        if (g_isJitter == 0) {
+            document.getElementById("AAreport").innerHTML =
+                g_AAcode + "x" + g_AAcode + " Supersampling. No jitter.";
+            console.log(g_AAcode, "x", g_AAcode, "Supersampling. No Jitter.");
+        } else {
+            document.getElementById("AAreport").innerHTML =
+                g_AAcode + "x" + g_AAcode + " JITTERED Supersampling";
+            console.log(g_AAcode, "x", g_AAcode, " JITTERED Supersampling.");
+        }
     }
-    
+}
 
 function onJitterButton() {
     //=============================================================================
@@ -1053,7 +1077,7 @@ function onJitterButton() {
 }
 
 function onBrowserResize(g_SceneNum, g_modelMatrix, g_viewProjMatrix) {
-    if(!g_SceneNum || !g_modelMatrix || !g_viewProjMatrix){
+    if (!g_SceneNum || !g_modelMatrix || !g_viewProjMatrix) {
         g_SceneNum = 0;
         g_modelMatrix = new Matrix4();
         g_viewProjMatrix = new Matrix4();
@@ -1071,4 +1095,3 @@ function onBrowserResize(g_SceneNum, g_modelMatrix, g_viewProjMatrix) {
 
     drawAll(g_SceneNum, g_modelMatrix, g_viewProjMatrix);
 }
-

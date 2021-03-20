@@ -283,7 +283,7 @@ CScene.prototype.initScene = function (num) {
 CScene.prototype.traceGeom = function (ray, myHit) {
     let hits = new CHitList(ray);
     for (k = 0; k < this.item.length; k++) {
-        if(!myHit || myHit.hitGeom.shapeType != this.item[k].shapeType){
+        if (!myHit || myHit.hitGeom.shapeType != this.item[k].shapeType) {
             let newHit = hits.add();
             this.item[k].traceMe(ray, newHit); // trace eyeRay thru it,
         }
@@ -316,13 +316,12 @@ CScene.prototype.makeRayTracedImage = function () {
                     let posX = i + (n0 + randX) / g_AAcode - 0.5;
                     let posY = j + (n1 + randY) / g_AAcode - 0.5;
                     this.rayCam.setEyeRay(this.eyeRay, posX, posY); // create ray for pixel (i,j)
-                    let hits = this.traceGeom(this.eyeRay)
+                    let hits = this.traceGeom(this.eyeRay);
                     if (hits.hitList.length > 0) {
                         let tmp = this.getColor(hits, this.rayCam.eyePt);
-                        if(tmp){
-                            vec4.add(colr,colr,tmp);
+                        if (tmp) {
+                            vec4.add(colr, colr, tmp);
                         }
-
                     }
                 }
             }
@@ -360,7 +359,7 @@ CScene.prototype.getColor = function (hits, eyePos) {
     light1.updateLightPos();
 
     let myHit = hits.closest();
-    if(myHit.hitNum == -1){
+    if (myHit.hitNum == -1) {
         return;
     }
     let fallout = 8;
@@ -369,50 +368,61 @@ CScene.prototype.getColor = function (hits, eyePos) {
         color0 = light0.getColor(myHit, eyePos);
         rcolor0 = this.getReflect(myHit, eyePos, light0);
         vec4.add(color0, color0, rcolor0);
-        let shadowI= this.isShadow(myHit, light0);
-        if(shadowI > 0){
-            if(g_shadowType == 2){
+        let shadowI = this.isShadow(myHit, light0);
+        if (shadowI > 0) {
+            if (g_shadowType == 2) {
                 let randX = Math.random();
-                if(randX < shadowI/fallout){
-                    vec4.subtract(color0, color0, [shadowI/fallout,shadowI/fallout,shadowI/fallout]);
+                if (randX < shadowI / fallout) {
+                    vec4.subtract(color0, color0, [
+                        shadowI / fallout,
+                        shadowI / fallout,
+                        shadowI / fallout,
+                    ]);
                     vec4.normalize(color0, color0);
                 }
-            }
-            else if (g_shadowType == 1){
-                vec4.subtract(color0, color0, [shadowI/fallout,shadowI/fallout,shadowI/fallout]);
+            } else if (g_shadowType == 1) {
+                vec4.subtract(color0, color0, [
+                    shadowI / fallout,
+                    shadowI / fallout,
+                    shadowI / fallout,
+                ]);
                 vec4.normalize(color0, color0);
-            }
-            else{
-                vec4.subtract(color0, color0, [0.4,0.4,0.4]);
+            } else {
+                vec4.subtract(color0, color0, [0.4, 0.4, 0.4]);
                 vec4.normalize(color0, color0);
             }
         }
     }
-    if ( g_worldLightOn) {
+    if (g_worldLightOn) {
         color1 = light1.getColor(myHit, eyePos);
         rcolor1 = this.getReflect(myHit, eyePos, light1);
         vec4.add(color1, color1, rcolor1);
-        let shadowI= this.isShadow(myHit, light1);
-        if(shadowI > 0){
-            if(g_shadowType == 2){
+        let shadowI = this.isShadow(myHit, light1);
+
+        if (shadowI > 0) {
+            if (g_shadowType == 2) {
                 let randX = Math.random();
-                if(randX < shadowI/fallout){
-                    vec4.subtract(color1, color1, [shadowI/fallout,shadowI/fallout,shadowI/fallout]);
+                if (randX < shadowI / fallout) {
+                    vec4.subtract(color1, color1, [
+                        shadowI / fallout,
+                        shadowI / fallout,
+                        shadowI / fallout,
+                    ]);
                     vec4.normalize(color1, color1);
                 }
-            }
-            else if (g_shadowType == 1){
-                vec4.subtract(color1, color1, [shadowI/fallout,shadowI/fallout,shadowI/fallout]);
+            } else if (g_shadowType == 1) {
+                vec4.subtract(color1, color1, [
+                    shadowI / fallout,
+                    shadowI / fallout,
+                    shadowI / fallout,
+                ]);
                 vec4.normalize(color1, color1);
-            }
-            else{
-                vec4.subtract(color1, color1, [0.4,0.4,0.4]);
+            } else {
+                vec4.subtract(color1, color1, [0.4, 0.4, 0.4]);
                 vec4.normalize(color1, color1);
             }
         }
-    } 
-    
-    else {
+    } else {
         color1 = vec4.fromValues(0, 0, 0, 1);
     }
     vec4.add(color1, color0, color1);
@@ -438,25 +448,30 @@ CScene.prototype.isShadow = function (myHit, light) {
         let p2 = (light.I_pos[0] - myHit.modelHitPt[0]) / rayDir[0];
         if (p1 < p2) {
             isInShadow = true;
-            return (p2 - p1)/p1 ;
+            return (p2 - p1) / p1;
         }
     }
     return 0;
 };
 
 CScene.prototype.getReflect = function (myHit, eyePos, curLight) {
-    let color =  vec4.create();
-    if(g_recurDepth > 0){
-        for(let i=0; i<g_recurDepth; i++){
+    let color = vec4.create();
+    if (g_recurDepth > 0) {
+        for (let i = 0; i < g_recurDepth; i++) {
             let rRay = new CRay();
             vec4.copy(rRay.orig, myHit.hitPt);
             vec4.copy(rRay.dir, myHit.refl);
             let rHits = this.traceGeom(rRay, myHit);
             let curRHit = rHits.closest();
-            if(curRHit.hitNum == -1){
+            if (curRHit.hitNum == -1) {
                 continue;
             }
-            vec4.scaleAndAdd(color, color, curLight.getColor(curRHit, eyePos), curLight.KShiny/g_falloff);
+            vec4.scaleAndAdd(
+                color,
+                color,
+                curLight.getColor(curRHit, eyePos),
+                curLight.KShiny / g_falloff
+            );
         }
     }
     return color;
@@ -527,14 +542,14 @@ function Light(idx) {
 var g_patternType = 0;
 Light.prototype.getColor = function (myHit) {
     this.setDefaultMat(myHit.hitGeom.matl);
-    if(myHit.hitNum == -1){
-        return
+    if (myHit.hitNum == -1) {
+        return;
     }
     // let mat = myHit.hitGeom.matl;
-    this.addPattern(g_patternType, myHit); //TODO: 
+    this.addPattern(g_patternType, myHit); //TODO:
     //emissive
     let color = vec4.clone(this.Ke);
-    
+
     //ambient
     let ambient = vec4.create();
     vec4.multiply(ambient, this.I_ambi, this.Ka);
@@ -558,7 +573,7 @@ Light.prototype.getColor = function (myHit) {
 
     let H = vec4.create();
     vec4.add(H, lightDirection, myHit.viewN);
-    vec4.normalize(H,H);
+    vec4.normalize(H, H);
     let nDotH = Math.max(vec4.dot(H, myHit.surfNorm), 0.0);
     let e64 = Math.pow(nDotH, this.KShiny);
     vec4.scale(speculr, speculr, e64);
@@ -610,10 +625,10 @@ Light.prototype.setDefaultLight = function () {
 };
 
 Light.prototype.setDefaultMat = function (matl, isGap) {
-    if(matl == null){
+    if (matl == null) {
         matl = g_matl0;
     }
-    if(!isGap){
+    if (!isGap) {
         this.matl = matl;
     }
     this.Ka = vec4.fromValues(
@@ -642,50 +657,70 @@ Light.prototype.setDefaultMat = function (matl, isGap) {
     );
     this.KShiny = matl.K_shiny;
 };
-Light.prototype.addPattern = function(pattern, myHit){
-    if(pattern == 1){
+Light.prototype.addPattern = function (pattern, myHit) {
+    if (pattern == 1) {
         let gapMat = new Material();
         gapMat.setMatl(1);
-        if(myHit.hitGeom.shapeType == RT_SPHERE && myHit.modelHitPt[0]*myHit.modelHitPt[0] + myHit.modelHitPt[1]*myHit.modelHitPt[1]
-            + myHit.modelHitPt[2]*myHit.modelHitPt[2] < 1){
-                this.setDefaultMat(gapMat, true)
+        if (
+            myHit.hitGeom.shapeType == RT_SPHERE &&
+            myHit.modelHitPt[0] * myHit.modelHitPt[0] +
+                myHit.modelHitPt[1] * myHit.modelHitPt[1] +
+                myHit.modelHitPt[2] * myHit.modelHitPt[2] <
+                1
+        ) {
+            this.setDefaultMat(gapMat, true);
         }
     }
-    if(pattern == 2){
+    if (pattern == 2) {
         let gapMat = new Material();
         gapMat.setMatl(1);
-        if(myHit.hitGeom.shapeType == RT_SPHERE && Math.floor(myHit.modelHitPt[0] + myHit.modelHitPt[1] + myHit.modelHitPt[2]) % 7 != 0 || Math.floor(myHit.modelHitPt[0] + myHit.modelHitPt[1] + myHit.modelHitPt[2]) % 3 != 0){
-            this.setDefaultMat(gapMat, true)
+        if (
+            (myHit.hitGeom.shapeType == RT_SPHERE &&
+                Math.floor(
+                    myHit.modelHitPt[0] +
+                        myHit.modelHitPt[1] +
+                        myHit.modelHitPt[2]
+                ) %
+                    7 !=
+                    0) ||
+            Math.floor(
+                myHit.modelHitPt[0] + myHit.modelHitPt[1] + myHit.modelHitPt[2]
+            ) %
+                3 !=
+                0
+        ) {
+            this.setDefaultMat(gapMat, true);
         }
     }
-    if(pattern == 3){
+    if (pattern == 3) {
         let gapMat = new Material();
         gapMat.setMatl(7);
-        if(Math.floor(Math.sin(myHit.modelHitPt[0]* myHit.modelHitPt[1])*10) % 5 == 0){
-            this.setDefaultMat(gapMat, true)
+        if (
+            Math.floor(
+                Math.sin(myHit.modelHitPt[0] * myHit.modelHitPt[1]) * 10
+            ) %
+                5 ==
+            0
+        ) {
+            this.setDefaultMat(gapMat, true);
         }
     }
-    if(pattern == 4){
+    if (pattern == 4) {
         let color = fractals(myHit.modelHitPt[0], myHit.modelHitPt[1]);
         vec3.normalize(color, color);
-        this.Kd = vec4.fromValues(
-            color[0],
-            color[1],
-            0.5,
-            0.1
-        );
+        this.Kd = vec4.fromValues(color[0], color[1], 0.5, 0.1);
     }
-}
+};
 
 function fractals(zx, zy) {
     let x = 3;
     let y = 3;
-    var cx = -.68 + x / 1200;
-    var cy = -.75 + y / 1200;
+    var cx = -0.68 + x / 1200;
+    var cy = -0.75 + y / 1200;
     var zx = Math.abs(Math.floor(zx));
-    var zy =  Math.abs(Math.floor(zy));
+    var zy = Math.abs(Math.floor(zy));
     let i = 0;
-    while (i<2 && zx * zx + zy * zy < 4){
+    while (i < 2 && zx * zx + zy * zy < 4) {
         var xt = zx * zy;
         zx = zx * zx - zy * zy + cx;
         zy = 2 * xt + cy;

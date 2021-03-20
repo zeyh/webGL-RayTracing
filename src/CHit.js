@@ -32,11 +32,16 @@ CHit.prototype.init = function () {
 };
 
 CHit.prototype.reflect = function (myRay) {
-    vec4.negate(this.viewN, myRay.dir); 
+    vec4.negate(this.viewN, myRay.dir);
     vec4.normalize(this.viewN, this.viewN);
-    vec4.negate(this.refl, this.viewN); 
+    vec4.negate(this.refl, this.viewN);
     vec4.normalize(this.surfNorm, this.surfNorm);
-    vec4.scaleAndAdd(this.refl, this.refl, this.surfNorm, vec4.dot(this.surfNorm, this.viewN) * 2);
+    vec4.scaleAndAdd(
+        this.refl,
+        this.refl,
+        this.surfNorm,
+        vec4.dot(this.surfNorm, this.viewN) * 2
+    );
     vec4.normalize(this.refl, this.refl);
 };
 
@@ -46,15 +51,12 @@ function CHitList(cRay) {
 }
 CHitList.prototype.add = function () {
     this.hitList.push(new CHit());
-    return this.hitList[this.hitList.length -1];
+    return this.hitList[this.hitList.length - 1];
 };
 CHitList.prototype.closest = function () {
     let resultIdx = 0;
     for (let i = 0; i < this.hitList.length; i++) {
-        if (
-            calDist(this, i) <
-            calDist(this, resultIdx)
-        ) {
+        if (calDist(this, i) < calDist(this, resultIdx)) {
             resultIdx = i;
         }
     }
